@@ -3,7 +3,7 @@ from threading import Thread
 from socket import *
 
 
-class Player(Thread):
+class GameClient(Thread):
     def __init__(self, agent, address):
         Thread.__init__(self)
         self.agent = agent

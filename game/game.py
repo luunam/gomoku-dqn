@@ -2,8 +2,9 @@ import pygame
 
 from agents import HumanAgent
 from agents import ComputerAgent
-from player import *
+from gameclient import *
 import time
+
 
 class Game:
     def __init__(self):
@@ -22,10 +23,10 @@ class Game:
         print('Running from ' + str(sock.getsockname()))
         sock.listen(1)
 
-        human_player = Player(HumanAgent(), address)
+        human_player = GameClient(HumanAgent(), address)
         human_connection, addr = sock.accept()
 
-        ai_player = Player(ComputerAgent(), address)
+        ai_player = GameClient(ComputerAgent(), address)
         ai_connection, addr = sock.accept()
 
         human_player.start()
