@@ -1,6 +1,7 @@
 from __future__ import print_function
 from threading import Thread
 from socket import *
+import errno
 
 
 class GameClient(Thread):
@@ -9,10 +10,16 @@ class GameClient(Thread):
         self.agent = agent
         self.keepRunning = True
         self.sock = socket(AF_INET, SOCK_STREAM)
-
         self.sock.connect(address)
+        self.sock.setblocking(0)
         self.sock.send(self.agent.name + ' connected')
 
     def run(self):
         while self.keepRunning:
-            print('running in thread ' + self.agent.name)
+            try:
+                data = self.sock.recv(1024)
+                print(data)
+                self.sock.send(self.agent.name + ' moved')
+            except error as err:
+                if err.errno != errno.EWOULDBLOCK:
+                    sys.exit()

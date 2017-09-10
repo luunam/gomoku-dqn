@@ -3,7 +3,7 @@ import pygame
 from agents import HumanAgent
 from agents import ComputerAgent
 from gameclient import *
-import time
+import random
 
 
 class Game:
@@ -11,6 +11,7 @@ class Game:
         self.players = []
         self.finish = False
         self.ip_address = '127.0.0.1'
+        self.turn = 0
         pass
 
     def run(self):
@@ -32,17 +33,31 @@ class Game:
         human_player.start()
         ai_player.start()
 
+        human_check_in = human_connection.recv(1024)
+        ai_check_in = ai_connection.recv(1024)
+
+        print(human_check_in)
+        print(ai_check_in)
+        player_connections = [human_connection, ai_connection]
+
         while not self.finish:
-            data = human_connection.recv(1024)
+            print('Player turn: ' + str(self.turn))
+            player_connections[self.turn].send('move your ass')
+            data = player_connections[self.turn].recv(1024)
             print(data)
-            data = ai_connection.recv(1024)
-            print(data)
+            self.turn = (self.turn + 1) % 2
+            self.check_finish()
 
-            time.sleep(3)
-            human_player.keepRunning = False
-            ai_player.keepRunning = False
+        print('OUT OF LOOP')
+        human_player.keepRunning = False
+        ai_player.keepRunning = False
 
-            human_player.join()
-            ai_player.join()
-            print('MAIN THREAD IS DONE')
-            break
+        human_player.join()
+        ai_player.join()
+        print('ALL PLAYERS FINISH')
+
+    def check_finish(self):
+        rand = random.randrange(1, 5, 1)
+        print('RAND: ' + str(rand))
+        if rand == 1:
+            self.finish = True
