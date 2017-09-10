@@ -18,8 +18,8 @@ class GameClient(Thread):
         while self.keepRunning:
             try:
                 data = self.sock.recv(1024)
-                print(data)
-                self.sock.send(self.agent.name + ' moved')
+                move = self.agent.move(data)
+                self.sock.send(self.agent.name + ' moved: ' + str(move))
             except error as err:
                 if err.errno != errno.EWOULDBLOCK:
                     sys.exit()
