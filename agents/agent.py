@@ -5,3 +5,6 @@ class Agent:
 
     def move(self, gamestate=None):
         pass
+
+    def replay(self, batch_size):
+        pass

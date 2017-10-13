@@ -12,3 +12,6 @@ class HumanAgent(Agent):
         y = raw_input('y: ')
 
         return {'x': x, 'y': y}
+
+    def replay(self, batch_size):
+        pass
