@@ -5,11 +5,11 @@ from keras.layers import Dense, Activation
 
 
 class ComputerAgent(Agent):
-    def __init__(self):
-        Agent.__init__(self)
+    def __init__(self, board_size):
+        Agent.__init__(self, board_size)
         self.name = 'computer'
         self.model = self._build_model()
-        self.state_size = 765
+        self.state_size = self.board_size * self.board_size * 3
 
     def _build_model(self):
         model = Sequential()
@@ -25,4 +25,7 @@ class ComputerAgent(Agent):
         return {'x': 1, 'y': 1}
 
     def replay(self, batch_size):
+        pass
+
+    def remember(self):
         pass

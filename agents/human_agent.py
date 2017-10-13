@@ -2,8 +2,8 @@ from agents.agent import Agent
 
 
 class HumanAgent(Agent):
-    def __init__(self):
-        Agent.__init__(self)
+    def __init__(self, board_size):
+        Agent.__init__(self, board_size)
         self.name = 'human'
 
     def move(self, gamestate=None):
