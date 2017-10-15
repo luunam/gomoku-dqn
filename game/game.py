@@ -3,32 +3,40 @@ import pygame
 from agents import HumanAgent
 from agents import ComputerAgent
 from gameclient import *
-import random
+from state import State
 
 
 class Game:
     def __init__(self):
-        self.players = []
+        self.agents = []
         self.finish = False
         self.ip_address = '127.0.0.1'
-        self.turn = 0
-        pass
+        self.turn = 1
+        self.board_size = 15
+        self.state = State(self.board_size)
 
-    def run(self):
+    def _start_game_server(self):
         print('Starting game')
         pygame.init()
 
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.bind((self.ip_address, 0))
-        address = sock.getsockname()
-        print('Running from ' + str(sock.getsockname()))
-        sock.listen(1)
+        self.sock = socket(AF_INET, SOCK_STREAM)
+        self.sock.bind((self.ip_address, 0))
+        self.address = self.sock.getsockname()
+        print('Running from ' + str(self.sock.getsockname()))
+        self.sock.listen(1)
 
-        human_player = GameClient(HumanAgent(), address)
-        human_connection, addr = sock.accept()
 
-        ai_player = GameClient(ComputerAgent(), address)
-        ai_connection, addr = sock.accept()
+    def _initialize_agent(self):
+        pass
+
+    def run(self):
+        self._start_game_server()
+
+        human_player = GameClient(HumanAgent(), self.address)
+        human_connection, addr = self.sock.accept()
+
+        ai_player = GameClient(ComputerAgent(), self.address)
+        ai_connection, addr = self.sock.accept()
 
         human_player.start()
         ai_player.start()
@@ -38,15 +46,20 @@ class Game:
 
         print(human_check_in)
         print(ai_check_in)
+
         player_connections = [human_connection, ai_connection]
 
-        while not self.finish:
+        while not self.state.finish():
             print('Player turn: ' + str(self.turn))
             player_connections[self.turn].send('move your ass')
-            data = player_connections[self.turn].recv(1024)
-            print(data)
-            self.turn = (self.turn + 1) % 2
-            self.check_finish()
+            action = player_connections[self.turn].recv(1024)
+            self.state = self.state.next_state(action)
+
+            reward = self.state.get_reward(self.turn)
+
+            self.current_player.remember(self.state, action, reward)
+
+            self.turn = 3 - self.turn
 
         print('OUT OF LOOP')
         human_player.keepRunning = False
@@ -55,9 +68,3 @@ class Game:
         human_player.join()
         ai_player.join()
         print('ALL PLAYERS FINISH')
-
-    def check_finish(self):
-        rand = random.randrange(1, 5, 1)
-        print('RAND: ' + str(rand))
-        if rand == 1:
-            self.finish = True

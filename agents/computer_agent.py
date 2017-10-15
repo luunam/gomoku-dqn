@@ -2,6 +2,7 @@ from agents.agent import Agent
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Activation
+import numpy as np
 
 
 class ComputerAgent(Agent):
@@ -20,9 +21,14 @@ class ComputerAgent(Agent):
 
         return model
 
-    def move(self, gamestate=None):
+    def _convert_gamestate_to_np(self, state):
+        return np.zeros()
+
+    def act(self, gamestate=None):
         self.gamestate = gamestate
-        return {'x': 1, 'y': 1}
+        state = self._convert_gamestate_to_np(gamestate)
+        act_value = self.model.predict(state)
+        return act_value
 
     def replay(self, batch_size):
         pass
