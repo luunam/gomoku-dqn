@@ -7,11 +7,11 @@ class HumanAgent(Agent):
         self.name = 'human'
 
     def act(self, state=None):
-        print('Human move')
         x = raw_input('x: ')
         y = raw_input('y: ')
 
-        return {'x': x, 'y': y}
+        print 'Human move: ' + str(x) + ' ' + str(y)
+        return int(x), int(y)
 
     def replay(self, batch_size):
         pass

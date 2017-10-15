@@ -3,7 +3,7 @@ import pygame
 from agents import HumanAgent
 from agents import ComputerAgent
 from state import State
-
+from colorama import init
 
 class Game:
     def __init__(self):
@@ -13,6 +13,7 @@ class Game:
         self.turn = 1
         self.board_size = 15
         self.state = State(self.board_size)
+        init()
 
     def _start_game_server(self):
         pass
@@ -35,14 +36,16 @@ class Game:
         self.agents = ['ignore', computer_agent, human_agent]
 
         while not self.state.finish():
+            self.state.print_state()
             print('Player turn: ' + str(self.turn))
 
             action = self.agents[self.turn].act(self.state)
+            next_state = self.state.next_state(action, self.turn)
 
-            self.state = self.state.next_state(action)
+            self.state = next_state
             reward = self.state.get_reward(self.turn)
 
-            self.agents[self.turn].remember(self.state, action, reward)
+            self.agents[self.turn].remember(self.state, action, reward, next_state)
 
             self.turn = 3 - self.turn
             self.finish = self.state.finish()

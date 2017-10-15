@@ -11,5 +11,5 @@ class Agent:
     def replay(self, batch_size):
         pass
 
-    def remember(self, state, action, reward):
+    def remember(self, state, action, reward, next_state):
         pass
