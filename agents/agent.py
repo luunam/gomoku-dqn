@@ -1,7 +1,8 @@
 class Agent:
-    def __init__(self, board_size):
+    def __init__(self, board_size, turn):
         self.gamestate = None
         self.board_size = board_size
+        self.turn = turn
         pass
 
     def act(self, gamestate=None):
@@ -10,5 +11,5 @@ class Agent:
     def replay(self, batch_size):
         pass
 
-    def remember(self):
+    def remember(self, state, action, reward):
         pass

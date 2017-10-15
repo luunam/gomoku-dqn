@@ -8,14 +8,14 @@ class GameClient(Thread):
     def __init__(self, agent, address):
         Thread.__init__(self)
         self.agent = agent
-        self.keepRunning = True
+        self.keep_running = True
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.connect(address)
         self.sock.setblocking(0)
         self.sock.send(self.agent.name + ' connected')
 
     def run(self):
-        while self.keepRunning:
+        while self.keep_running:
             try:
                 data = self.sock.recv(1024)
                 move = self.agent.act(data)
