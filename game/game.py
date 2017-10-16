@@ -35,7 +35,7 @@ class Game:
         # add 'ignore' to the list because self.turn starts with 1
         self.agents = ['ignore', computer_agent, human_agent]
 
-        while not self.state.finish():
+        while not self.state.done():
             self.state.print_state()
             print('Player turn: ' + str(self.turn))
 
@@ -43,9 +43,14 @@ class Game:
             next_state = self.state.next_state(action, self.turn)
 
             self.state = next_state
-            reward = self.state.get_reward(self.turn)
 
+            opponent_turn = 3 - self.turn
+            reward = self.state.get_reward(self.turn)
+            opponent_reward = self.state.get_reward(opponent_turn)
+
+            reward = reward - opponent_reward
+            print 'reward: ' + str(reward)
             self.agents[self.turn].remember(self.state, action, reward, next_state)
 
-            self.turn = 3 - self.turn
-            self.finish = self.state.finish()
+            self.turn = opponent_turn
+            self.finish = self.state.done()
