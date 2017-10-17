@@ -51,11 +51,11 @@ class State:
             return 1000
 
         # Traverse sum diagonal (diagonal that i+j are equal)
-        for sum in range(0, 2*(self.size-1)):
-            x_max = min(sum, self.size - 1)
-            x_min = max(0, sum - self.size + 1)
+        for sum_indices in range(0, 2*self.size - 1):
+            x_max = min(sum_indices, self.size - 1)
+            x_min = max(0, sum_indices - self.size + 1)
             for x in range(x_min, x_max+1):
-                y = sum - x
+                y = sum_indices - x
                 accumulate = self.evaluate(x, y, accumulate, turn, result)
 
             accumulate = ''
@@ -76,38 +76,46 @@ class State:
         if self.finish:
             return 1000
 
+        print str(result)
+
         return result['open_three'] + result['four'] + 5 * result['open_four']
 
     def evaluate(self, i, j, accumulate, turn, result):
-        if len(accumulate) < 6:
-            if self.board[i][j] == turn:
-                accumulate += 'x'
-            elif self.board[i][j] == 0:
-                accumulate += ' '
-            else:
-                accumulate += 'y'
+        if self.board[i][j] == turn:
+            accumulate += 'x'
+        elif self.board[i][j] == 0:
+            accumulate += ' '
+        else:
+            accumulate += 'y'
+
+        accumulate5 = ''
+        if len(accumulate) == 6:
+            accumulate5 = accumulate[1:6]
+        elif len(accumulate) == 5:
+            accumulate5 = accumulate
 
         if len(accumulate) == 6:
-            if accumulate == ' xx x ' or accumulate == ' x xx ' or accumulate[0:5] == ' xxx ' \
-                    or accumulate[1:6] == ' xxx ':
+            if accumulate == ' xx x ' or accumulate == ' x xx ':
                 result['open_three'] += 1
 
             if accumulate == ' xxxx ':
                 result['open_four'] += 1
                 result['four'] -= 2
 
-            five = [accumulate[0:5], accumulate[1:6]]
-            for tmp in five:
-                if tmp == 'xxx x' or tmp == 'xx xx' or tmp == 'x xxx' or tmp == ' xxxx' or tmp == 'xxxx ':
-                    result['four'] += 1
-
-                if tmp == 'xxxxx':
-                    result['five'] += 1
-                    self.finish = True
-                    self.winner = turn
-                    return accumulate
-
             accumulate = accumulate[1:6]
+
+        if len(accumulate5) == 5:
+            if accumulate5 == ' xxx ' or accumulate5 == ' xxx ':
+                result['open_three'] += 1
+
+            if accumulate5 == 'xxx x' or accumulate5 == 'xx xx' or accumulate5 == 'x xxx' or accumulate5 == ' xxxx' or accumulate5 == 'xxxx ':
+                result['four'] += 1
+
+            if accumulate5 == 'xxxxx':
+                result['five'] += 1
+                self.finish = True
+                self.winner = turn
+                return accumulate
 
         return accumulate
 
