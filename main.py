@@ -2,7 +2,7 @@ from __future__ import print_function
 from game.game import Game
 from agents import HumanAgent, ComputerAgent
 
-EPISODES = 1000
+EPISODES = 5000
 SIZE = 15
 
 
@@ -15,8 +15,8 @@ def train():
         new_game = Game(agent1, agent2)
         new_game.run()
 
-        agent1.replay(10)
-        agent2.replay(10)
+        agent1.replay(50)
+        agent2.replay(50)
 
         agent1.reset()
         agent2.reset()

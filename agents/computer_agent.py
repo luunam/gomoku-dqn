@@ -15,6 +15,10 @@ class ComputerAgent(Agent):
         self.action_size = self.board_size * self.board_size
         self.learning_rate = 0.001
         self.model = self._build_model()
+        self.duplicate_model = self._build_model()
+
+        self.duplicate_model.set_weights(self.model.get_weights())
+
         self.memory = []
         self.gamma = 0.95
         self.old_moves = set()
@@ -76,9 +80,9 @@ class ComputerAgent(Agent):
             state_np = state.get_np_value()
             next_state_np = next_state.get_np_value()
 
-            target = self.model.predict(state_np)
+            target = self.duplicate_model.predict(state_np)
 
-            q_value = reward + self.gamma * np.amax(self.model.predict(next_state_np))
+            q_value = reward + self.gamma * np.amax(self.duplicate_model.predict(next_state_np))
             action_idx = action[0] * self.board_size + action[1]
 
             target[0][action_idx] = q_value
@@ -87,6 +91,8 @@ class ComputerAgent(Agent):
 
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
+
+        self.duplicate_model.set_weights(self.model.get_weights())
 
         print 'finish replay'
 
