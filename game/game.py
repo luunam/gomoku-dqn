@@ -6,13 +6,14 @@ from state import State
 from colorama import init
 
 class Game:
-    def __init__(self):
-        self.agents = []
+    def __init__(self, agent1, agent2, size=15):
+        self.agents = ['ignore', agent1, agent2]
         self.finish = False
         self.ip_address = '127.0.0.1'
         self.turn = 1
-        self.board_size = 15
+        self.board_size = size
         self.state = State(self.board_size)
+        self.last_move = (-1,-1)
         init()
 
     def _start_game_server(self):
@@ -25,21 +26,16 @@ class Game:
         # print('Running from ' + str(self.sock.getsockname()))
         # self.sock.listen(1)
 
-    def _initialize_agent(self):
-        pass
-
     def run(self):
-        human_agent = HumanAgent(self.board_size, 1)
-        computer_agent = ComputerAgent(self.board_size, 2)
+        while not self.finish:
+            action = self.agents[self.turn].act(self.state, self.last_move)
 
-        # add 'ignore' to the list because self.turn starts with 1
-        self.agents = ['ignore', computer_agent, human_agent]
+            if action[0] == -1:
+                print 'Game is Draw'
+                self.finish = True
+                break
 
-        while not self.state.done():
-            self.state.print_state()
-            print('Player turn: ' + str(self.turn))
-
-            action = self.agents[self.turn].act(self.state)
+            self.last_move = action
             next_state = self.state.next_state(action, self.turn)
 
             self.state = next_state
@@ -49,8 +45,10 @@ class Game:
             opponent_reward = self.state.get_reward(opponent_turn)
 
             reward = reward - opponent_reward
-            print 'reward: ' + str(reward)
+            # print 'reward: ' + str(reward)
             self.agents[self.turn].remember(self.state, action, reward, next_state)
 
             self.turn = opponent_turn
             self.finish = self.state.done()
+
+        self.state.print_state()

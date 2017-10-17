@@ -76,7 +76,7 @@ class State:
         if self.finish:
             return 1000
 
-        print str(result)
+        # print str(result)
 
         return result['open_three'] + result['four'] + 5 * result['open_four']
 

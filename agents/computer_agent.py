@@ -3,11 +3,13 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 from keras.optimizers import Adam
 import numpy as np
+import random
+from random import randint
 
 
 class ComputerAgent(Agent):
-    def __init__(self, board_size, turn):
-        Agent.__init__(self, board_size, turn)
+    def __init__(self, board_size):
+        Agent.__init__(self, board_size)
         self.name = 'computer'
         self.state_size = self.board_size * self.board_size
         self.action_size = self.board_size * self.board_size
@@ -15,38 +17,84 @@ class ComputerAgent(Agent):
         self.model = self._build_model()
         self.memory = []
         self.gamma = 0.95
+        self.old_moves = set()
+
+        self.epsilon = 1
+        self.epsilon_decay = 0.95
+        self.epsilon_min = 0.01
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(25, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(255, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(255, activation='relu'))
         model.add(Dense(self.action_size, activation='relu'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
 
         return model
 
-    def act(self, state=None):
-        self.gamestate = state
-        state = state.get_np_value()
-        act_value = self.model.predict(state)
+    def act(self, state, last_move):
+        self.old_moves.add(last_move[0] * self.board_size + last_move[1])
 
-        best_action = np.argmax(act_value)
-        print 'Best action: ' + str(best_action)
+        if len(self.old_moves) == self.action_size:
+            return -1, -1
+
+        if np.random.rand() <= self.epsilon:
+            best_action = randint(0, self.action_size-1)
+            while best_action in self.old_moves:
+                best_action = randint(0, self.action_size-1)
+
+        else:
+            self.gamestate = state
+            state = state.get_np_value()
+            act_value = self.model.predict(state)
+
+            sorted_arg = np.argsort(act_value)[0]
+            k = 1
+            while k <= self.action_size:
+                best_action = sorted_arg[self.action_size - k]
+                if best_action not in self.old_moves:
+                    self.old_moves.add(best_action)
+                    break
+
+                k+=1
+
         x = best_action / self.board_size
         y = best_action % self.board_size
 
-        print 'Computer move: ' + str(x) + ' ' + str(y)
+        # print 'Computer move: ' + str(x) + ' ' + str(y)
         return x, y
 
     def replay(self, batch_size):
-        for state, action, reward, next_state in self.memory:
+        if batch_size < len(self.memory):
+            batch = random.sample(self.memory, batch_size)
+        else:
+            batch = self.memory
+
+        print 'start replay'
+        for state, action, reward, next_state in batch:
             state_np = state.get_np_value()
             next_state_np = next_state.get_np_value()
 
             target = self.model.predict(state_np)
-            target[0][action] = reward + self.gamma * np.amax(self.model.predict(next_state_np))
 
-            self.model.fit(state, target, epoch=1, verbose=0)
+            q_value = reward + self.gamma * np.amax(self.model.predict(next_state_np))
+            action_idx = action[0] * self.board_size + action[1]
+
+            target[0][action_idx] = q_value
+
+            self.model.fit(state_np, target, epochs=1, verbose=0)
+
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_decay
+
+        print 'finish replay'
 
     def remember(self, state, action, reward, next_state):
         self.memory.append((state, action, reward, next_state))
+
+    def reset(self):
+        self.old_moves = set()
+
+    def save(self, name):
+        self.model.save_weights(name)
