@@ -13,7 +13,7 @@ class ComputerAgent(Agent):
         self.name = 'computer'
         self.state_size = self.board_size * self.board_size
         self.action_size = self.board_size * self.board_size
-        self.learning_rate = 0.001
+        self.learning_rate = 0.05
         self.model = self._build_model()
         self.duplicate_model = self._build_model()
 
@@ -24,7 +24,7 @@ class ComputerAgent(Agent):
         self.old_moves = set()
 
         self.epsilon = 1
-        self.epsilon_decay = 0.95
+        self.epsilon_decay = 0.999
         self.epsilon_min = 0.01
 
     def _build_model(self):
@@ -34,11 +34,11 @@ class ComputerAgent(Agent):
         model.add(Dense(self.action_size, activation='relu'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
-
         return model
 
     def act(self, state, last_move):
-        self.old_moves.add(last_move[0] * self.board_size + last_move[1])
+        if last_move is not None:
+            self.old_moves.add(last_move[0] * self.board_size + last_move[1])
 
         if len(self.old_moves) == self.action_size:
             return -1, -1
@@ -75,12 +75,13 @@ class ComputerAgent(Agent):
         else:
             batch = self.memory
 
-        print 'start replay'
         for state, action, reward, next_state in batch:
             state_np = state.get_np_value()
             next_state_np = next_state.get_np_value()
 
             target = self.duplicate_model.predict(state_np)
+
+            # print str(target)
 
             q_value = reward + self.gamma * np.amax(self.duplicate_model.predict(next_state_np))
             action_idx = action[0] * self.board_size + action[1]
@@ -93,8 +94,6 @@ class ComputerAgent(Agent):
                 self.epsilon *= self.epsilon_decay
 
         self.duplicate_model.set_weights(self.model.get_weights())
-
-        print 'finish replay'
 
     def remember(self, state, action, reward, next_state):
         self.memory.append((state, action, reward, next_state))

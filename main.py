@@ -2,7 +2,7 @@ from __future__ import print_function
 from game.game import Game
 from agents import HumanAgent, ComputerAgent
 
-EPISODES = 5000
+EPISODES = 10000
 SIZE = 15
 
 

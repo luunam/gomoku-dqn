@@ -14,15 +14,22 @@ class State:
 
         self.finish = False
         self.winner = 0
+        self.rewards = ['ignore', 0, 0]
 
     def next_state(self, action, turn):
         clone_board = self._clone_board()
         clone_board[action[0]][action[1]] = turn
-        return State(15, clone_board)
+
+        next_state = State(15, clone_board)
+        next_state.rewards[turn] = next_state.get_reward(turn)
+        next_state.rewards[3-turn] = next_state.get_reward(3-turn)
+
+        return next_state
 
     def get_reward(self, turn):
         accumulate = ''
         result = {
+            'three': 0,
             'open_three': 0,
             'four': 0,
             'open_four': 0,
@@ -37,7 +44,7 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1000
+            return 1
 
         # Traverse column
         accumulate = ' '
@@ -48,7 +55,7 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1000
+            return 1
 
         # Traverse sum diagonal (diagonal that i+j are equal)
         for sum_indices in range(0, 2*self.size - 1):
@@ -61,7 +68,7 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1000
+            return 1
 
         # Traverse diff diagonal:
         for diff in range(-(self.size - 1), self.size):
@@ -74,11 +81,13 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1000
+            return 1
 
         # print str(result)
-
-        return 10*(result['open_three'] + result['four']) + 50 * result['open_four']
+        reward = (2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
+        if reward == 0:
+            return
+        return
 
     def evaluate(self, i, j, accumulate, turn, result):
         if self.board[i][j] == turn:
@@ -88,34 +97,67 @@ class State:
         else:
             accumulate += 'y'
 
+        accumulate6 = ''
         accumulate5 = ''
-        if len(accumulate) == 6:
-            accumulate5 = accumulate[1:6]
-        elif len(accumulate) == 5:
-            accumulate5 = accumulate
+        accumulate4 = ''
+        accumulate3 = ''
 
-        if len(accumulate) == 6:
-            if accumulate == ' xx x ' or accumulate == ' x xx ':
+        accumulate_length = len(accumulate)
+        if accumulate_length == 7:
+            accumulate6 = accumulate[1:7]
+            accumulate5 = accumulate[2:7]
+            accumulate4 = accumulate[3:7]
+            accumulate3 = accumulate[4:7]
+
+        elif accumulate_length == 6:
+            accumulate6 = accumulate
+            accumulate5 = accumulate[1:6]
+            accumulate4 = accumulate[2:6]
+            accumulate3 = accumulate[3:6]
+
+        elif accumulate_length == 5:
+            accumulate5 = accumulate
+            accumulate4 = accumulate[1:5]
+            accumulate3 = accumulate[2:5]
+
+        elif accumulate_length == 4:
+            accumulate4 = accumulate
+
+        if accumulate_length == 7:
+            if accumulate == ' xxx x ' or accumulate == ' x xxx ':
+                result['open_three'] -= 1
+
+            accumulate = accumulate6
+
+        if len(accumulate6) == 6:
+            if accumulate6 == ' xx x ' or accumulate6 == ' x xx ':
                 result['open_three'] += 1
 
-            if accumulate == ' xxxx ':
+            if accumulate6 == ' xxxx ':
                 result['open_four'] += 1
                 result['four'] -= 2
-
-            accumulate = accumulate[1:6]
 
         if len(accumulate5) == 5:
             if accumulate5 == ' xxx ' or accumulate5 == ' xxx ':
                 result['open_three'] += 1
+                result['three'] -= 2
 
-            if accumulate5 == 'xxx x' or accumulate5 == 'xx xx' or accumulate5 == 'x xxx' or accumulate5 == ' xxxx' or accumulate5 == 'xxxx ':
+            if accumulate5 == 'xxx x' or accumulate5 == 'xx xx' or accumulate5 == 'x xxx':
                 result['four'] += 1
+
+            if accumulate5 == ' xxxx' or accumulate5 == 'xxxx ':
+                result['four'] += 1
+                result['three'] -= 1
 
             if accumulate5 == 'xxxxx':
                 result['five'] += 1
                 self.finish = True
                 self.winner = turn
                 return accumulate
+
+        if len(accumulate4) == 4:
+            if accumulate4 == 'xxx ' or accumulate4 == ' xxx':
+                result['three'] += 1
 
         return accumulate
 

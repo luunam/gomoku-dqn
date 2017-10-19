@@ -1,7 +1,3 @@
-import pygame
-
-from agents import HumanAgent
-from agents import ComputerAgent
 from state import State
 from colorama import init
 
@@ -12,8 +8,9 @@ class Game:
         self.ip_address = '127.0.0.1'
         self.turn = 1
         self.board_size = size
+        self.previous_state = State(self.board_size)
         self.state = State(self.board_size)
-        self.last_move = (-1,-1)
+        self.last_action = None
         init()
 
     def _start_game_server(self):
@@ -28,27 +25,32 @@ class Game:
 
     def run(self):
         while not self.finish:
-            action = self.agents[self.turn].act(self.state, self.last_move)
+            action = self.agents[self.turn].act(self.state, self.last_action)
 
             if action[0] == -1:
                 print 'Game is Draw'
                 self.finish = True
                 break
 
-            self.last_move = action
             next_state = self.state.next_state(action, self.turn)
 
-            self.state = next_state
-
             opponent_turn = 3 - self.turn
-            reward = self.state.get_reward(self.turn)
-            opponent_reward = self.state.get_reward(opponent_turn)
+            reward = self.state.rewards[self.turn]
+            opponent_reward = self.state.rewards[opponent_turn]
+            opponent_reward = opponent_reward * (1.0 - reward)
 
-            reward = reward - opponent_reward
             # print 'reward: ' + str(reward)
-            self.agents[self.turn].remember(self.state, action, reward, next_state)
+            if self.last_action is not None:
+                self.agents[opponent_turn].remember(self.previous_state, self.last_action, opponent_reward, next_state)
 
+            self.last_action = action
+            self.previous_state = self.state
+            self.state = next_state
             self.turn = opponent_turn
+
             self.finish = self.state.done()
 
+            # self.state.print_state()
+            # print('')
+        print('')
         self.state.print_state()
