@@ -87,7 +87,10 @@ class State:
         # print str(result)
         result['two'] = max(0, result['two'])
         result['three'] = max(0, result['three'])
-        reward = (0.01*result['two'] + 0.05*result['three'] + 2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
+        reward = (0.1*result['two'] + 0.5*result['three'] + 2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
+
+        if reward == 0:
+            return 0.01
 
         return reward
 
