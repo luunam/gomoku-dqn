@@ -107,7 +107,7 @@ class ComputerAgent(Agent):
         self.model.save_weights(name)
 
     def brain_wash(self):
-        self.isCrazy = True
+        self.epsilon = 0.5
 
     def rehab(self):
         self.isCrazy = False
