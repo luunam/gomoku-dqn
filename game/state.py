@@ -85,9 +85,8 @@ class State:
 
         # print str(result)
         reward = (2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
-        if reward == 0:
-            return
-        return
+
+        return reward
 
     def evaluate(self, i, j, accumulate, turn, result):
         if self.board[i][j] == turn:

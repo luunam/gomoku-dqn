@@ -1,6 +1,7 @@
 from state import State
 from colorama import init
 
+
 class Game:
     def __init__(self, agent1, agent2, size=15):
         self.agents = ['ignore', agent1, agent2]
@@ -15,13 +16,6 @@ class Game:
 
     def _start_game_server(self):
         pass
-        # pygame.init()
-        #
-        # self.sock = socket(AF_INET, SOCK_STREAM)
-        # self.sock.bind((self.ip_address, 0))
-        # self.address = self.sock.getsockname()
-        # print('Running from ' + str(self.sock.getsockname()))
-        # self.sock.listen(1)
 
     def run(self):
         while not self.finish:
@@ -35,8 +29,9 @@ class Game:
             next_state = self.state.next_state(action, self.turn)
 
             opponent_turn = 3 - self.turn
-            reward = self.state.rewards[self.turn]
-            opponent_reward = self.state.rewards[opponent_turn]
+            reward = next_state.rewards[self.turn]
+            opponent_reward = next_state.rewards[opponent_turn]
+
             opponent_reward = opponent_reward * (1.0 - reward)
 
             # print 'reward: ' + str(reward)
