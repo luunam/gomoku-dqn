@@ -33,7 +33,8 @@ class State:
             'open_three': 0,
             'four': 0,
             'open_four': 0,
-            'five': 0
+            'five': 0,
+            'two': 0
         }
 
         # Traverse row
@@ -84,7 +85,9 @@ class State:
             return 1
 
         # print str(result)
-        reward = (2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
+        result['two'] = max(0, result['two'])
+        result['three'] = max(0, result['three'])
+        reward = (0.01*result['two'] + 0.05*result['three'] + 2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
 
         return reward
 
@@ -121,6 +124,10 @@ class State:
 
         elif accumulate_length == 4:
             accumulate4 = accumulate
+            accumulate3 = accumulate[1:4]
+
+        elif accumulate_length == 3:
+            accumulate3 = accumulate
 
         if accumulate_length == 7:
             if accumulate == ' xxx x ' or accumulate == ' x xxx ':
@@ -131,6 +138,7 @@ class State:
         if len(accumulate6) == 6:
             if accumulate6 == ' xx x ' or accumulate6 == ' x xx ':
                 result['open_three'] += 1
+                result['two'] -= 2
 
             if accumulate6 == ' xxxx ':
                 result['open_four'] += 1
@@ -141,10 +149,11 @@ class State:
                 result['open_three'] += 1
                 result['three'] -= 2
 
-            if accumulate5 == 'xxx x' or accumulate5 == 'xx xx' or accumulate5 == 'x xxx':
+            if accumulate5 == 'xx xx':
                 result['four'] += 1
+                result['two'] -= 2
 
-            if accumulate5 == ' xxxx' or accumulate5 == 'xxxx ':
+            if accumulate5 == ' xxxx' or accumulate5 == 'xxxx ' or accumulate5 == 'xxx x' or accumulate5 == 'x xxx':
                 result['four'] += 1
                 result['three'] -= 1
 
@@ -157,6 +166,11 @@ class State:
         if len(accumulate4) == 4:
             if accumulate4 == 'xxx ' or accumulate4 == ' xxx':
                 result['three'] += 1
+                result['two'] -= 1
+
+        if len(accumulate3) == 3:
+            if accumulate3 == 'xx ' or accumulate3 == ' xx':
+                result['two'] += 1
 
         return accumulate
 

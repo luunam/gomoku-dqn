@@ -12,6 +12,7 @@ class Game:
         self.previous_state = State(self.board_size)
         self.state = State(self.board_size)
         self.last_action = None
+
         init()
 
     def _start_game_server(self):

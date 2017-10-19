@@ -21,6 +21,15 @@ def train():
         agent1.reset()
         agent2.reset()
 
+        if i % 32 == 0:
+            agent2.brain_wash()
+        if i % 32 == 4:
+            agent2.rehab()
+        if i % 32 == 16:
+            agent1.brain_wash()
+        if i % 32 == 20:
+            agent1.rehab()
+
     agent1.save('./trained/agent1.h5')
     agent2.save('./trained/agent2.h5')
 

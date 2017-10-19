@@ -27,6 +27,8 @@ class ComputerAgent(Agent):
         self.epsilon_decay = 0.999
         self.epsilon_min = 0.01
 
+        self.isCrazy = False
+
     def _build_model(self):
         model = Sequential()
         model.add(Dense(255, input_dim=self.state_size, activation='relu'))
@@ -43,7 +45,7 @@ class ComputerAgent(Agent):
         if len(self.old_moves) == self.action_size:
             return -1, -1
 
-        if np.random.rand() <= self.epsilon:
+        if np.random.rand() <= self.epsilon or self.isCrazy:
             best_action = randint(0, self.action_size-1)
             while best_action in self.old_moves:
                 best_action = randint(0, self.action_size-1)
@@ -103,3 +105,9 @@ class ComputerAgent(Agent):
 
     def save(self, name):
         self.model.save_weights(name)
+
+    def brain_wash(self):
+        self.isCrazy = True
+
+    def rehab(self):
+        self.isCrazy = False
