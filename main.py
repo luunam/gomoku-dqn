@@ -3,7 +3,7 @@ from game.game import Game
 from agents import HumanAgent, ComputerAgent
 import argparse
 
-EPISODES = 1000
+EPISODES = 10000
 SIZE = 15
 
 
