@@ -1,7 +1,6 @@
 from state import State
 from colorama import init
 
-
 class Game:
     def __init__(self, agent1, agent2, size=15):
         self.agents = ['ignore', agent1, agent2]
