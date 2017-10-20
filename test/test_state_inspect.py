@@ -105,6 +105,5 @@ class TestStateInspect(unittest.TestCase):
         self.assertEqual(result_o['open_three'], 1)
 
 
-
 if __name__ == '__main__':
     unittest.main()

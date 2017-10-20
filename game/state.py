@@ -239,6 +239,3 @@ class State:
 
     def done(self):
         return self.finish
-
-
-
