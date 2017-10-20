@@ -37,14 +37,14 @@ class State:
 
         result['two'] = max(0, result['two'])
         result['three'] = max(0, result['three'])
-        reward = (0.1 * result['two'] + 0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 *
-                  result['open_four']) / 20
+        reward = (0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 *
+                  result['open_four']) / 10
 
         if reward == 0:
             return 0.01
 
         if reward >= 1:
-            return 0.99
+            return 0.9
         else:
             return reward
 

@@ -13,6 +13,7 @@ class ComputerAgent(Agent):
         self.name = 'computer'
         self.state_size = self.board_size * self.board_size
         self.action_size = self.board_size * self.board_size
+
         self.learning_rate = 0.05
         self.model = self._build_model()
         self.duplicate_model = self._build_model()
@@ -33,8 +34,13 @@ class ComputerAgent(Agent):
         model.add(Dense(225, input_dim=self.state_size, activation='sigmoid'))
         model.add(Dense(225, activation='sigmoid'))
         model.add(Dense(self.action_size, activation='sigmoid'))
+
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
+
+
+        print model.get_weights()
+        # model.set_weights(np.zeros(3, 255))
         return model
 
     def act(self, state, last_move):
@@ -78,8 +84,15 @@ class ComputerAgent(Agent):
         else:
             batch = self.memory
 
-        print 'start replay'
         for state, action, reward, next_state in batch:
+            # print 'state'
+            # state.print_state()
+            # print 'next state'
+            # next_state.print_state()
+            #
+            # print 'action: ' + str(action)
+            # print 'reward: ' + str(reward)
+
             state_np = state.get_np_value()
 
             target = self.duplicate_model.predict(state_np)
@@ -99,6 +112,8 @@ class ComputerAgent(Agent):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
+            # print ''
+
         self.duplicate_model.set_weights(self.model.get_weights())
 
     def remember(self, state, action, reward, next_state):
@@ -108,7 +123,7 @@ class ComputerAgent(Agent):
         self.model.save_weights(name)
 
     def brain_wash(self):
-        self.epsilon = 0.5
+        self.epsilon = 0.4
 
     def rehab(self):
         self.isCrazy = False

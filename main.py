@@ -18,10 +18,10 @@ def train():
         agent1.replay(50)
         agent2.replay(50)
 
-        # if i % 32 == 0:
-        #     agent2.brain_wash()
-        # if i % 32 == 16:
-        #     agent1.brain_wash()
+        if i % 200 == 0:
+            agent2.brain_wash()
+        if i % 400 == 0:
+            agent1.brain_wash()
 
     agent1.save('./trained/agent1.h5')
     agent2.save('./trained/agent2.h5')
