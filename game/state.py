@@ -15,14 +15,17 @@ class State:
         self.finish = False
         self.winner = 0
         self.rewards = ['ignore', 0, 0]
+        self.occupied = 0
 
     def next_state(self, action, turn):
         clone_board = self._clone_board()
         clone_board[action[0]][action[1]] = turn
+        self.occupied += 1
 
         next_state = State(15, clone_board)
         next_state.rewards[turn] = next_state.get_reward(turn)
         next_state.rewards[3-turn] = next_state.get_reward(3-turn)
+        next_state.occupied = self.occupied
 
         return next_state
 
@@ -35,10 +38,13 @@ class State:
         result['two'] = max(0, result['two'])
         result['three'] = max(0, result['three'])
         reward = (0.1 * result['two'] + 0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 *
-                  result['open_four']) / 10.0
+                  result['open_four']) / 20
 
         if reward == 0:
             return 0.01
+
+        if reward >= 1:
+            return 0.99
         else:
             return reward
 
@@ -225,6 +231,11 @@ class State:
                 sys.stdout.write(to_print + ' ')
 
             sys.stdout.write('\n')
+
+    def valid_move(self, move):
+        i = move / 15
+        j = move % 15
+        return self.board[i][j] == 0
 
     def done(self):
         return self.finish

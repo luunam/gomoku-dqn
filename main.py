@@ -2,7 +2,7 @@ from __future__ import print_function
 from game.game import Game
 from agents import HumanAgent, ComputerAgent
 
-EPISODES = 10000
+EPISODES = 1000
 SIZE = 15
 
 
@@ -18,13 +18,10 @@ def train():
         agent1.replay(50)
         agent2.replay(50)
 
-        agent1.reset()
-        agent2.reset()
-
-        if i % 32 == 0:
-            agent2.brain_wash()
-        if i % 32 == 16:
-            agent1.brain_wash()
+        # if i % 32 == 0:
+        #     agent2.brain_wash()
+        # if i % 32 == 16:
+        #     agent1.brain_wash()
 
     agent1.save('./trained/agent1.h5')
     agent2.save('./trained/agent2.h5')

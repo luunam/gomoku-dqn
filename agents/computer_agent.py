@@ -21,7 +21,6 @@ class ComputerAgent(Agent):
 
         self.memory = []
         self.gamma = 0.95
-        self.old_moves = set()
 
         self.epsilon = 1
         self.epsilon_decay = 0.999
@@ -31,45 +30,47 @@ class ComputerAgent(Agent):
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(255, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(255, activation='relu'))
-        model.add(Dense(self.action_size, activation='relu'))
+        model.add(Dense(225, input_dim=self.state_size, activation='sigmoid'))
+        model.add(Dense(225, activation='sigmoid'))
+        model.add(Dense(self.action_size, activation='sigmoid'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
         return model
 
     def act(self, state, last_move):
-        if last_move is not None:
-            self.old_moves.add(last_move[0] * self.board_size + last_move[1])
-
-        if len(self.old_moves) == self.action_size:
+        if state.occupied == 225:
             return -1, -1
 
-        if np.random.rand() <= self.epsilon or self.isCrazy:
+        if np.random.rand() <= self.epsilon:
             best_action = randint(0, self.action_size-1)
-            while best_action in self.old_moves:
+            while not state.valid_move(best_action):
                 best_action = randint(0, self.action_size-1)
 
         else:
             self.gamestate = state
-            state = state.get_np_value()
-            act_value = self.model.predict(state)
+            best_action, best_action_value = self.get_best_move(self.model, self.gamestate)
 
-            sorted_arg = np.argsort(act_value)[0]
-            k = 1
-            while k <= self.action_size:
-                best_action = sorted_arg[self.action_size - k]
-                if best_action not in self.old_moves:
-                    self.old_moves.add(best_action)
-                    break
-
-                k+=1
-
+        # print best_action_value
         x = best_action / self.board_size
         y = best_action % self.board_size
 
         # print 'Computer move: ' + str(x) + ' ' + str(y)
         return x, y
+
+    def get_best_move(self, model, state):
+        state_np = state.get_np_value()
+        act_value = model.predict(state_np)
+        # print act_value
+        sorted_arg = np.argsort(act_value)[0]
+        k = 1
+        while k <= self.action_size:
+            best_action = sorted_arg[self.action_size - k]
+            if state.valid_move(best_action):
+                break
+
+            k += 1
+
+        return best_action, act_value[0][best_action]
 
     def replay(self, batch_size):
         if batch_size < len(self.memory):
@@ -77,15 +78,18 @@ class ComputerAgent(Agent):
         else:
             batch = self.memory
 
+        print 'start replay'
         for state, action, reward, next_state in batch:
             state_np = state.get_np_value()
-            next_state_np = next_state.get_np_value()
 
             target = self.duplicate_model.predict(state_np)
 
             # print str(target)
+            best_action_idx, best_action_value = self.get_best_move(self.duplicate_model, next_state)
+            q_value = reward + self.gamma * best_action_value
 
-            q_value = reward + self.gamma * np.amax(self.duplicate_model.predict(next_state_np))
+            if q_value < 0:
+                print q_value
             action_idx = action[0] * self.board_size + action[1]
 
             target[0][action_idx] = q_value
@@ -99,9 +103,6 @@ class ComputerAgent(Agent):
 
     def remember(self, state, action, reward, next_state):
         self.memory.append((state, action, reward, next_state))
-
-    def reset(self):
-        self.old_moves = set()
 
     def save(self, name):
         self.model.save_weights(name)
