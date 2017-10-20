@@ -98,8 +98,12 @@ class ComputerAgent(Agent):
             target = self.duplicate_model.predict(state_np)
 
             # print str(target)
-            best_action_idx, best_action_value = self.get_best_move(self.duplicate_model, next_state)
-            q_value = reward + self.gamma * best_action_value
+            if next_state.done():
+                q_value = reward
+
+            else:
+                best_action_idx, best_action_value = self.get_best_move(self.duplicate_model, next_state)
+                q_value = reward + self.gamma * best_action_value
 
             if q_value < 0:
                 print q_value

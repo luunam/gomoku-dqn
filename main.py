@@ -3,7 +3,7 @@ from game.game import Game
 from agents import HumanAgent, ComputerAgent
 import argparse
 
-EPISODES = 20000
+EPISODES = 1000
 SIZE = 15
 
 
@@ -16,8 +16,8 @@ def train():
         new_game = Game(agent1, agent2)
         new_game.run()
 
-        agent1.replay(500)
-        agent2.replay(500)
+        agent1.replay(100)
+        agent2.replay(100)
 
         if i % 200 == 0:
             agent2.brain_wash()
