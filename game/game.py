@@ -1,7 +1,6 @@
 from state import State
 from colorama import init
 
-
 class Game:
     def __init__(self, agent1, agent2, size=15):
         self.agents = ['ignore', agent1, agent2]
@@ -31,6 +30,8 @@ class Game:
 
             opponent_turn = 3 - self.turn
             reward = next_state.rewards[self.turn]
+            if reward > 1:
+                print 'REWARD: ' + str(reward)
             opponent_reward = next_state.rewards[opponent_turn]
 
             opponent_reward = opponent_reward * (1.0 - reward)

@@ -13,8 +13,5 @@ class Agent:
     def remember(self, state, action, reward, next_state):
         pass
 
-    def reset(self):
-        pass
-
     def save(self, name):
         pass

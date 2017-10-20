@@ -15,18 +15,40 @@ class State:
         self.finish = False
         self.winner = 0
         self.rewards = ['ignore', 0, 0]
+        self.occupied = 0
 
     def next_state(self, action, turn):
         clone_board = self._clone_board()
         clone_board[action[0]][action[1]] = turn
+        self.occupied += 1
 
         next_state = State(15, clone_board)
         next_state.rewards[turn] = next_state.get_reward(turn)
         next_state.rewards[3-turn] = next_state.get_reward(3-turn)
+        next_state.occupied = self.occupied
 
         return next_state
 
     def get_reward(self, turn):
+        result = self.inspect(turn)
+
+        if result['five'] >= 1:
+            return 1
+
+        result['two'] = max(0, result['two'])
+        result['three'] = max(0, result['three'])
+        reward = (0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 *
+                  result['open_four']) / 10
+
+        if reward == 0:
+            return 0.01
+
+        if reward >= 1:
+            return 0.9
+        else:
+            return reward
+
+    def inspect(self, turn):
         accumulate = ''
         result = {
             'three': 0,
@@ -38,6 +60,7 @@ class State:
         }
 
         # Traverse row
+        # print 'traverse row'
         for i in range(self.size):
             for j in range(self.size):
                 accumulate = self.evaluate(i, j, accumulate, turn, result)
@@ -45,9 +68,11 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1
+            result['five'] = 1
+            return result
 
         # Traverse column
+        # print 'traverse column'
         accumulate = ' '
         for j in range(self.size):
             for i in range(self.size):
@@ -56,9 +81,11 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1
+            result['five'] = 1
+            return result
 
         # Traverse sum diagonal (diagonal that i+j are equal)
+        # print 'sum diag'
         for sum_indices in range(0, 2*self.size - 1):
             x_max = min(sum_indices, self.size - 1)
             x_min = max(0, sum_indices - self.size + 1)
@@ -69,9 +96,11 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1
+            result['five'] = 1
+            return result
 
         # Traverse diff diagonal:
+        # print 'diff diag'
         for diff in range(-(self.size - 1), self.size):
             x_max = min(self.size-1, self.size + diff - 1)
             x_min = max(0, diff)
@@ -82,17 +111,12 @@ class State:
             accumulate = ''
 
         if self.finish:
-            return 1
+            result['five'] = 1
+            return result
 
         # print str(result)
-        result['two'] = max(0, result['two'])
-        result['three'] = max(0, result['three'])
-        reward = (0.1*result['two'] + 0.5*result['three'] + 2*result['open_three'] + 3*result['four'] + 10*result['open_four']) / 10.0
 
-        if reward == 0:
-            return 0.01
-
-        return reward
+        return result
 
     def evaluate(self, i, j, accumulate, turn, result):
         if self.board[i][j] == turn:
@@ -139,6 +163,9 @@ class State:
             accumulate = accumulate6
 
         if len(accumulate6) == 6:
+            if accumulate6 == 'xx xxx':
+                result['four'] -= 1
+
             if accumulate6 == ' xx x ' or accumulate6 == ' x xx ':
                 result['open_three'] += 1
                 result['two'] -= 2
@@ -146,6 +173,9 @@ class State:
             if accumulate6 == ' xxxx ':
                 result['open_four'] += 1
                 result['four'] -= 2
+
+            if accumulate6 == 'x xxx ' or accumulate6 == ' xxx x':
+                result['three'] += 1
 
         if len(accumulate5) == 5:
             if accumulate5 == ' xxx ' or accumulate5 == ' xxx ':
@@ -201,6 +231,11 @@ class State:
                 sys.stdout.write(to_print + ' ')
 
             sys.stdout.write('\n')
+
+    def valid_move(self, move):
+        i = move / 15
+        j = move % 15
+        return self.board[i][j] == 0
 
     def done(self):
         return self.finish

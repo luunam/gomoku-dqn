@@ -3,7 +3,7 @@ from game.game import Game
 from agents import HumanAgent, ComputerAgent
 import argparse
 
-EPISODES = 10000
+EPISODES = 1000
 SIZE = 15
 
 
@@ -19,12 +19,9 @@ def train():
         agent1.replay(500)
         agent2.replay(500)
 
-        agent1.reset()
-        agent2.reset()
-
-        if i % 32 == 0:
+        if i % 200 == 0:
             agent2.brain_wash()
-        if i % 32 == 16:
+        if i % 400 == 0:
             agent1.brain_wash()
 
     agent1.save('./trained/agent1.h5')
