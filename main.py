@@ -1,6 +1,7 @@
 from __future__ import print_function
 from game.game import Game
 from agents import HumanAgent, ComputerAgent
+import argparse
 
 EPISODES = 10000
 SIZE = 15
@@ -15,8 +16,8 @@ def train():
         new_game = Game(agent1, agent2)
         new_game.run()
 
-        agent1.replay(50)
-        agent2.replay(50)
+        agent1.replay(500)
+        agent2.replay(500)
 
         agent1.reset()
         agent2.reset()
@@ -31,6 +32,12 @@ def train():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser
+
+    parser.add_argument('option', type=str)
+    args = parser.parse_args()
+
+
     # human_agent = HumanAgent(SIZE)
     # computer_agent = ComputerAgent(SIZE)
     # game = Game(human_agent, computer_agent)
