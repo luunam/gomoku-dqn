@@ -19,25 +19,26 @@ def train():
         agent1.replay(100)
         agent2.replay(100)
 
-        if i % 200 == 0:
-            agent2.brain_wash()
-        if i % 400 == 0:
-            agent1.brain_wash()
-
     agent1.save('./trained/agent1.h5')
     agent2.save('./trained/agent2.h5')
 
 
+def test():
+    agent1 = HumanAgent(SIZE)
+    agent2 = ComputerAgent(SIZE)
+
+    agent1.load('./trained/agent1_save.h5')
+    agent2.load('./trained/agent2_save.h5')
+
+    agent1.epsilon = 0.00001
+    agent2.epsilon = 0.00001
+
+    new_game = Game(agent1, agent2)
+    new_game.run()
+
+
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser
-    #
-    # parser.add_argument('option', type=str)
-    # args = parser.parse_args()
-
-
-    # human_agent = HumanAgent(SIZE)
-    # computer_agent = ComputerAgent(SIZE)
-    # game = Game(human_agent, computer_agent)
-    # game.run()
 
     train()
+
+    # test()

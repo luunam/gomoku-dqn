@@ -15,3 +15,6 @@ class Agent:
 
     def save(self, name):
         pass
+
+    def load(self, name):
+        pass

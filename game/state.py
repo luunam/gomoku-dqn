@@ -7,6 +7,7 @@ from colorama import Fore, Style
 class State:
     def __init__(self, size, board=None):
         self.size = size
+        self.action_size = self.size * self.size
         if board is None:
             self.board = [[0 for x in range(self.size)] for y in range(self.size)]
         else:
@@ -25,6 +26,10 @@ class State:
         next_state = State(15, clone_board)
         next_state.rewards[turn] = next_state.get_reward(turn)
         next_state.rewards[3-turn] = next_state.get_reward(3-turn)
+
+        if self.occupied == self.action_size:
+            next_state.finish = True
+
         next_state.occupied = self.occupied
 
         return next_state
@@ -33,20 +38,16 @@ class State:
         result = self.inspect(turn)
 
         if result['five'] >= 1:
-            return 1
+            return 100
 
         result['two'] = max(0, result['two'])
         result['three'] = max(0, result['three'])
-        reward = (0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 *
-                  result['open_four']) / 10
+        reward = 0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 * result['open_four']
 
         if reward == 0:
             return 0.01
 
-        if reward >= 1:
-            return 0.9
-        else:
-            return reward
+        return reward
 
     def inspect(self, turn):
         accumulate = ''
@@ -60,7 +61,6 @@ class State:
         }
 
         # Traverse row
-        # print 'traverse row'
         for i in range(self.size):
             for j in range(self.size):
                 accumulate = self.evaluate(i, j, accumulate, turn, result)
@@ -72,7 +72,6 @@ class State:
             return result
 
         # Traverse column
-        # print 'traverse column'
         accumulate = ' '
         for j in range(self.size):
             for i in range(self.size):
@@ -85,7 +84,6 @@ class State:
             return result
 
         # Traverse sum diagonal (diagonal that i+j are equal)
-        # print 'sum diag'
         for sum_indices in range(0, 2*self.size - 1):
             x_max = min(sum_indices, self.size - 1)
             x_min = max(0, sum_indices - self.size + 1)
@@ -100,7 +98,6 @@ class State:
             return result
 
         # Traverse diff diagonal:
-        # print 'diff diag'
         for diff in range(-(self.size - 1), self.size):
             x_max = min(self.size-1, self.size + diff - 1)
             x_min = max(0, diff)
@@ -113,8 +110,6 @@ class State:
         if self.finish:
             result['five'] = 1
             return result
-
-        # print str(result)
 
         return result
 
