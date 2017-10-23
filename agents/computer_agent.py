@@ -89,9 +89,6 @@ class ComputerAgent(Agent):
                 best_action_idx, best_action_value = self.get_best_move(self.duplicate_model, next_state)
                 q_value = reward + self.gamma * best_action_value
 
-            if q_value < 0:
-                print 'NEGATIVE Q VALUE: ' + str(q_value)
-
             action_idx = action[0] * self.board_size + action[1]
             action_value = self.sigmoid(q_value)
 
