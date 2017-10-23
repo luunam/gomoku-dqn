@@ -33,7 +33,7 @@ class Game:
             reward = next_state.rewards[self.turn]
             opponent_reward = next_state.rewards[opponent_turn]
 
-            opponent_reward = opponent_reward * (100 - reward)
+            opponent_reward = opponent_reward - reward
 
             if self.last_action is not None:
                 self.agents[opponent_turn].remember(self.previous_state, self.last_action, opponent_reward, next_state)

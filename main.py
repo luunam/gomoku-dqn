@@ -3,7 +3,7 @@ from game.game import Game
 from agents import HumanAgent, ComputerAgent
 import argparse
 
-EPISODES = 10000
+EPISODES = 200000
 SIZE = 15
 
 conf = {
@@ -13,15 +13,18 @@ conf = {
 
 def train():
     agent = ComputerAgent(SIZE)
+    try:
+        for i in range(EPISODES):
+            print("EPISODE: " + str(i))
+            new_game = Game(agent, agent)
+            new_game.run()
 
-    for i in range(EPISODES):
-        print("EPISODE: " + str(i))
-        new_game = Game(agent, agent)
-        new_game.run()
+            agent.replay(100)
 
-        agent.replay(100)
+        agent.save('./trained/agent.h5')
 
-    agent.save('./trained/agent.h5')
+    except KeyboardInterrupt:
+        agent.save('./trained/agent_interrupt.h5')
 
 
 def test():
@@ -45,7 +48,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     command = args.command
-
 
     if command == 'train':
         train()
