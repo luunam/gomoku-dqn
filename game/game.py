@@ -20,7 +20,7 @@ class Game:
 
     def run(self):
         while not self.finish:
-            action = self.agents[self.turn].act(self.state, self.last_action)
+            action = self.agents[self.turn].act(self.state)
 
             if action[0] == -1:
                 print 'Game is Draw'

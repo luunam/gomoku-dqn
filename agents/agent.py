@@ -4,7 +4,7 @@ class Agent:
         self.board_size = board_size
         pass
 
-    def act(self, gamestate, last_move):
+    def act(self, gamestate):
         pass
 
     def replay(self, batch_size):

@@ -6,7 +6,7 @@ class HumanAgent(Agent):
         Agent.__init__(self, board_size)
         self.name = 'human'
 
-    def act(self, state, last_move):
+    def act(self, state):
         x = raw_input('x: ')
         y = raw_input('y: ')
 

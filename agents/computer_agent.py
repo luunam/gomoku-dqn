@@ -28,8 +28,6 @@ class ComputerAgent(Agent):
         self.epsilon_decay = 0.999
         self.epsilon_min = 0.01
 
-        self.isCrazy = False
-
     def _build_model(self):
         model = Sequential()
         model.add(Dense(225, input_dim=self.state_size, activation='sigmoid', kernel_initializer='zeros'))
@@ -42,7 +40,7 @@ class ComputerAgent(Agent):
 
         return model
 
-    def act(self, state, last_move):
+    def act(self, state):
         if np.random.rand() <= self.epsilon:
             best_action = randint(0, self.action_size-1)
             while not state.valid_move(best_action):
@@ -117,9 +115,6 @@ class ComputerAgent(Agent):
 
     def brain_wash(self):
         self.epsilon = 0.4
-
-    def rehab(self):
-        self.isCrazy = False
 
     def load(self, name):
         self.model.load_weights(name)

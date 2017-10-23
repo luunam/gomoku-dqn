@@ -6,21 +6,22 @@ import argparse
 EPISODES = 10000
 SIZE = 15
 
+conf = {
+    'debug': False
+}
+
 
 def train():
-    agent1 = ComputerAgent(SIZE)
-    agent2 = ComputerAgent(SIZE)
+    agent = ComputerAgent(SIZE)
 
     for i in range(EPISODES):
         print("EPISODE: " + str(i))
-        new_game = Game(agent1, agent2)
+        new_game = Game(agent, agent)
         new_game.run()
 
-        agent1.replay(100)
-        agent2.replay(100)
+        agent.replay(100)
 
-    agent1.save('./trained/agent1.h5')
-    agent2.save('./trained/agent2.h5')
+    agent.save('./trained/agent.h5')
 
 
 def test():
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     command = args.command
+
 
     if command == 'train':
         train()
