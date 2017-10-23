@@ -113,9 +113,6 @@ class ComputerAgent(Agent):
     def save(self, name):
         self.model.save_weights(name)
 
-    def brain_wash(self):
-        self.epsilon = 0.4
-
     def load(self, name):
         self.model.load_weights(name)
         self.duplicate_model.load_weights(name)

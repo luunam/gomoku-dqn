@@ -24,6 +24,7 @@ def train():
         agent.save('./trained/agent.h5')
 
     except KeyboardInterrupt:
+        print('Key board interrupt, emergency save')
         agent.save('./trained/agent_interrupt.h5')
 
 
