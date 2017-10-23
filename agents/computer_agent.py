@@ -32,9 +32,10 @@ class ComputerAgent(Agent):
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(225, input_dim=self.state_size, activation='sigmoid'))
-        model.add(Dense(225, activation='sigmoid'))
-        model.add(Dense(self.action_size, activation='sigmoid'))
+        model.add(Dense(225, input_dim=self.state_size, activation='sigmoid', kernel_initializer='zeros'))
+        model.add(Dense(225, activation='sigmoid', kernel_initializer='zeros'))
+        model.add(Dense(225, activation='sigmoid', kernel_initializer='zeros'))
+        model.add(Dense(self.action_size, activation='sigmoid', kernel_initializer='zeros'))
 
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
@@ -50,6 +51,7 @@ class ComputerAgent(Agent):
         else:
             self.gamestate = state
             best_action, best_action_value = self.get_best_move(self.model, self.gamestate)
+            # print "BEST ACTION VALUE: " + str(best_action_value)
 
         x = best_action / self.board_size
         y = best_action % self.board_size
