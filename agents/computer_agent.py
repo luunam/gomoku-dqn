@@ -99,7 +99,7 @@ class ComputerAgent(Agent):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-        if len(self.memory) > 7500000:
+        if len(self.memory) > 75000:
             print 'MEMORY IS TOO LARGE, CLEANING'
             self.memory = batch
 
