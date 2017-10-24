@@ -3,8 +3,9 @@ from game.game import Game
 from agents import HumanAgent, ComputerAgent
 import argparse
 
-EPISODES = 50000
+EPISODES = 2000000
 SIZE = 15
+BATCH_SIZE = 225
 
 conf = {
     'debug': False
@@ -19,7 +20,7 @@ def train():
             new_game = Game(agent, agent)
             new_game.run()
 
-            agent.replay(100)
+            agent.replay(BATCH_SIZE)
 
         agent.save('./trained/agent.h5')
 
@@ -29,16 +30,16 @@ def train():
 
 
 def test():
-    agent1 = HumanAgent(SIZE)
+    human_agent = HumanAgent(SIZE)
     agent2 = ComputerAgent(SIZE)
 
-    agent1.load('./trained/agent1.h5')
-    agent2.load('./trained/agent2.h5')
+    human_agent.load('./trained/agent1.h5')
+    agent2.load('./trained/agent.h5')
 
-    agent1.epsilon = 0
+    human_agent.epsilon = 0
     agent2.epsilon = 0
 
-    new_game = Game(agent1, agent2)
+    new_game = Game(human_agent, agent2, SIZE, True)
     new_game.run()
 
 

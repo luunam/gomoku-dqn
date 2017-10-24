@@ -99,6 +99,10 @@ class ComputerAgent(Agent):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
+        if len(self.memory) > 7500000:
+            print 'MEMORY IS TOO LARGE, CLEANING'
+            self.memory = batch
+
         self.duplicate_model.set_weights(self.model.get_weights())
 
     def sigmoid(self, x):

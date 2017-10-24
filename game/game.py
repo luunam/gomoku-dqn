@@ -3,7 +3,7 @@ from colorama import init
 
 
 class Game:
-    def __init__(self, agent1, agent2, size=15):
+    def __init__(self, agent1, agent2, size=15, test=False):
         self.agents = ['ignore', agent1, agent2]
         self.finish = False
         self.ip_address = '127.0.0.1'
@@ -12,6 +12,7 @@ class Game:
         self.previous_state = State(self.board_size)
         self.state = State(self.board_size)
         self.last_action = None
+        self.test = test
 
         init()
 
@@ -42,7 +43,10 @@ class Game:
             self.previous_state = self.state
             self.state = next_state
             self.turn = opponent_turn
-
             self.finish = self.state.done()
+
+            if self.test:
+                self.state.print_state()
+                print ''
 
         self.state.print_state()
