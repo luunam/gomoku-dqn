@@ -4,7 +4,7 @@ from agents import HumanAgent, ComputerAgent
 import argparse
 import logging
 
-EPISODES = 2000000
+EPISODES = 25000
 SIZE = 15
 BATCH_SIZE = 225
 
