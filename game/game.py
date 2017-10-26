@@ -38,7 +38,15 @@ class Game:
             logging.debug('Reward for ' + str(opponent_turn) + ': ' + str(opponent_reward))
 
             if self.last_action is not None:
-                self.agents[opponent_turn].remember(self.previous_state, self.last_action, opponent_reward, next_state)
+                if self.turn == 1:
+                    reflected_previous_state = self.previous_state.reflected_state()
+                    reflected_next_state = next_state.reflected_state()
+
+                    self.agents[opponent_turn].remember(reflected_previous_state, self.last_action,
+                                                        opponent_reward, reflected_next_state)
+                else:
+                    self.agents[opponent_turn].remember(self.previous_state, self.last_action,
+                                                        opponent_reward, next_state)
 
             self.last_action = action
             self.previous_state = self.state
@@ -47,7 +55,7 @@ class Game:
             self.finish = self.state.done()
 
             if self.test:
-                self.state.print_state()
+                print(str(self.state))
                 print ''
 
         self.state.print_state()

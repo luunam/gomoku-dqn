@@ -41,6 +41,17 @@ class State:
 
         return next_state
 
+    def reflected_state(self):
+        clone_board = self._clone_board()
+        for i in range(self.size):
+            for j in range(self.size):
+                if clone_board[i][j] == 1:
+                    clone_board[i][j] = 2
+                elif clone_board[i][j] == 2:
+                    clone_board[i][j] = 1
+
+        return State(15, clone_board)
+
     def get_reward(self, turn):
         result = self.inspect(turn)
         logging.debug('Result for ' + str(turn) + ': ' + str(result))
@@ -246,10 +257,12 @@ class State:
         for i in range(self.size):
             for j in range(self.size):
                 value = self.board[i][j]
-                to_return = str(value)
+
                 if value == 1:
-                    to_return += str(value)
-                if value == 2:
+                    to_return += Fore.GREEN + str(value) + Style.RESET_ALL
+                elif value == 2:
+                    to_return += Fore.RED + str(value) + Style.RESET_ALL
+                else:
                     to_return += str(value)
 
                 to_return += ' '

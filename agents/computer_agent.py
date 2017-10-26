@@ -81,11 +81,11 @@ class ComputerAgent(Agent):
 
         for state, action, reward, next_state in batch:
             logging.debug('State: ')
-            logging.debug(str(state))
+            logging.debug('\n' + str(state))
             logging.debug('Action: ' + str(action))
             logging.debug('Reward: ' + str(reward))
             logging.debug('Next state: ')
-            logging.debug(str(next_state))
+            logging.debug('\n' + str(next_state))
             logging.debug('')
             state_np = state.get_np_value()
 

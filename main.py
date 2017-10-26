@@ -32,7 +32,7 @@ def test():
     human_agent = HumanAgent(SIZE)
     agent2 = ComputerAgent(SIZE)
 
-    agent2.load('./trained/agent_interrupt.h5')
+    # agent2.load('./trained/agent_interrupt.h5')
 
     human_agent.epsilon = 0
     agent2.epsilon = 0
