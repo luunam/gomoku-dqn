@@ -6,6 +6,7 @@ import numpy as np
 import random
 from random import randint
 import math
+import logging
 
 
 class ComputerAgent(Agent):
@@ -49,7 +50,6 @@ class ComputerAgent(Agent):
         else:
             self.gamestate = state
             best_action, best_action_value = self.get_best_move(self.model, self.gamestate)
-            # print "BEST ACTION VALUE: " + str(best_action_value)
 
         x = best_action / self.board_size
         y = best_action % self.board_size
@@ -77,7 +77,16 @@ class ComputerAgent(Agent):
         else:
             batch = self.memory
 
+        logging.debug('Replaying: ')
+
         for state, action, reward, next_state in batch:
+            logging.debug('State: ')
+            logging.debug(str(state))
+            logging.debug('Action: ' + str(action))
+            logging.debug('Reward: ' + str(reward))
+            logging.debug('Next state: ')
+            logging.debug(str(next_state))
+            logging.debug('')
             state_np = state.get_np_value()
 
             target = self.duplicate_model.predict(state_np)
@@ -92,7 +101,11 @@ class ComputerAgent(Agent):
             action_idx = action[0] * self.board_size + action[1]
             action_value = self.sigmoid(q_value)
 
+            logging.debug('Action value: ' + str(action_value))
             target[0][action_idx] = action_value
+
+            logging.debug('Target: ')
+            logging.debug(str(target))
 
             self.model.fit(state_np, target, epochs=1, verbose=0)
 
@@ -100,13 +113,13 @@ class ComputerAgent(Agent):
                 self.epsilon *= self.epsilon_decay
 
         if len(self.memory) > 75000:
-            print 'MEMORY IS TOO LARGE, CLEANING'
+            print 'Memory is too large, cleaning'
             self.memory = batch
 
         self.duplicate_model.set_weights(self.model.get_weights())
 
     def sigmoid(self, x):
-        return 1 / (1 + math.exp(-x))
+        return 1 / (1 + math.exp(-x/5.0))
 
     def remember(self, state, action, reward, next_state):
         self.memory.append((state, action, reward, next_state))

@@ -1,6 +1,6 @@
 from state import State
 from colorama import init
-
+import logging
 
 class Game:
     def __init__(self, agent1, agent2, size=15, test=False):
@@ -33,8 +33,9 @@ class Game:
             opponent_turn = 3 - self.turn
             reward = next_state.rewards[self.turn]
             opponent_reward = next_state.rewards[opponent_turn]
-
+            logging.debug('Reward for ' + str(self.turn) + ': ' + str(reward))
             opponent_reward = opponent_reward - reward
+            logging.debug('Reward for ' + str(opponent_turn) + ': ' + str(opponent_reward))
 
             if self.last_action is not None:
                 self.agents[opponent_turn].remember(self.previous_state, self.last_action, opponent_reward, next_state)

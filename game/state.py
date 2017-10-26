@@ -2,6 +2,7 @@ import random
 import sys
 import numpy as np
 from colorama import Fore, Style
+import logging
 
 
 class State:
@@ -18,12 +19,18 @@ class State:
         self.rewards = ['ignore', 0, 0]
         self.occupied = 0
 
+        # Player's turn that does the last move
+        self.turn = None
+        self.win = False
+
     def next_state(self, action, turn):
         clone_board = self._clone_board()
         clone_board[action[0]][action[1]] = turn
         self.occupied += 1
 
         next_state = State(15, clone_board)
+        next_state.turn = turn
+
         next_state.rewards[turn] = next_state.get_reward(turn)
         next_state.rewards[3-turn] = next_state.get_reward(3-turn)
 
@@ -36,16 +43,20 @@ class State:
 
     def get_reward(self, turn):
         result = self.inspect(turn)
+        logging.debug('Result for ' + str(turn) + ': ' + str(result))
 
-        if result['five'] >= 1:
-            return 100
+        if self.finish:
+            if self.winner == turn:
+                return 20
+            else:
+                return 0
 
         result['two'] = max(0, result['two'])
         result['three'] = max(0, result['three'])
         reward = 0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 * result['open_four']
 
         if reward == 0:
-            return 0.01
+            return 0.1
 
         return reward
 
@@ -120,6 +131,9 @@ class State:
             accumulate += ' '
         else:
             accumulate += 'y'
+
+        if not accumulate:
+            return result
 
         accumulate6 = ''
         accumulate5 = ''
@@ -226,6 +240,23 @@ class State:
                 sys.stdout.write(to_print + ' ')
 
             sys.stdout.write('\n')
+
+    def __str__(self):
+        to_return = ''
+        for i in range(self.size):
+            for j in range(self.size):
+                value = self.board[i][j]
+                to_return = str(value)
+                if value == 1:
+                    to_return += str(value)
+                if value == 2:
+                    to_return += str(value)
+
+                to_return += ' '
+
+            to_return += '\n'
+
+        return to_return
 
     def valid_move(self, move):
         i = move / 15
