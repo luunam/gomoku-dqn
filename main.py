@@ -7,7 +7,7 @@ import logging
 
 EPISODES = 25000
 SIZE = 15
-BATCH_SIZE = 225
+BATCH_SIZE = 900
 
 
 def train():
@@ -32,7 +32,7 @@ def test():
     human_agent = HumanAgent(SIZE)
     agent2 = ComputerAgent(SIZE)
 
-    # agent2.load('./trained/agent_interrupt.h5')
+    agent2.load('./trained/agent.h5')
 
     human_agent.epsilon = 0
     agent2.epsilon = 0
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         print('Saving log to: ' + args.log)
         logging.basicConfig(filename=args.log,
                             level=logging.DEBUG,
-                            format='%(asctime)s %(name)-12s %(levelname)s %(message)s',
+                            format='%(asctime)s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
 
     if args.episodes:

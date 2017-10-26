@@ -131,4 +131,4 @@ class ComputerAgent(Agent):
         self.model.load_weights(name)
         self.duplicate_model.load_weights(name)
         logging.debug('Model weights: ')
-        logging.debug(self.model.get_weights())
+        logging.debug('\n' + str(self.model.get_weights()))
