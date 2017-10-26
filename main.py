@@ -32,7 +32,7 @@ def test():
     human_agent = HumanAgent(SIZE)
     agent2 = ComputerAgent(SIZE)
 
-    # agent2.load('./trained/agent.h5')
+    agent2.load('./trained/agent_interrupt.h5')
 
     human_agent.epsilon = 0
     agent2.epsilon = 0
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Command, either train or test')
     parser.add_argument('command', type=str)
     parser.add_argument('--log', type=str)
-    parser.add_argument('--episodes', type=int)
+    parser.add_argument('-e', '--episodes', type=int)
 
     args = parser.parse_args()
 

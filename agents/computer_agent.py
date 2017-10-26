@@ -31,10 +31,10 @@ class ComputerAgent(Agent):
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(225, input_dim=self.state_size, activation='sigmoid', kernel_initializer='zeros'))
-        model.add(Dense(225, activation='sigmoid', kernel_initializer='zeros'))
-        model.add(Dense(225, activation='sigmoid', kernel_initializer='zeros'))
-        model.add(Dense(self.action_size, activation='sigmoid', kernel_initializer='zeros'))
+        model.add(Dense(225, input_dim=self.state_size, activation='sigmoid'))
+        model.add(Dense(225, activation='sigmoid'))
+        model.add(Dense(225, activation='sigmoid'))
+        model.add(Dense(self.action_size, activation='sigmoid'))
 
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
@@ -130,3 +130,5 @@ class ComputerAgent(Agent):
     def load(self, name):
         self.model.load_weights(name)
         self.duplicate_model.load_weights(name)
+        logging.debug('Model weights: ')
+        logging.debug(self.model.get_weights())
