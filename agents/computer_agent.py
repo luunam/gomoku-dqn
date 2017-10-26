@@ -105,7 +105,7 @@ class ComputerAgent(Agent):
             target[0][action_idx] = action_value
 
             logging.debug('Target: ')
-            logging.debug(str(target))
+            logging.debug('\n' + str(target))
 
             self.model.fit(state_np, target, epochs=1, verbose=0)
 

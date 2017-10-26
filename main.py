@@ -57,7 +57,7 @@ if __name__ == "__main__":
         print('Saving log to: ' + args.log)
         logging.basicConfig(filename=args.log,
                             level=logging.DEBUG,
-                            format='%(asctime)s %(levelname)s %(message)s',
+                            format='%(asctime)s %(name)-12s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
 
     if args.episodes:
