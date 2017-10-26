@@ -1,5 +1,6 @@
 import unittest
-from test_utils import *
+
+from utils.state_loader import *
 
 
 class TestStateInspect(unittest.TestCase):

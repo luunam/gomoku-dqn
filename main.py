@@ -1,6 +1,7 @@
 from __future__ import print_function
 from game.game import Game
 from agents import HumanAgent, ComputerAgent
+from benchmark import Benchmarker
 import argparse
 import logging
 
@@ -8,13 +9,10 @@ EPISODES = 25000
 SIZE = 15
 BATCH_SIZE = 225
 
-conf = {
-    'debug': False
-}
-
 
 def train():
     agent = ComputerAgent(SIZE)
+    print('Train with: ' + str(EPISODES) + ' episodes')
     try:
         for i in range(EPISODES):
             print("Episode: " + str(i))
@@ -34,7 +32,6 @@ def test():
     human_agent = HumanAgent(SIZE)
     agent2 = ComputerAgent(SIZE)
 
-    human_agent.load('./trained/agent1.h5')
     # agent2.load('./trained/agent.h5')
 
     human_agent.epsilon = 0
@@ -50,6 +47,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Command, either train or test')
     parser.add_argument('command', type=str)
     parser.add_argument('--log', type=str)
+    parser.add_argument('--episodes', type=int)
+
     args = parser.parse_args()
 
     command = args.command
@@ -60,6 +59,9 @@ if __name__ == "__main__":
                             level=logging.DEBUG,
                             format='%(asctime)s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
+
+    if args.episodes:
+        EPISODES = args.episodes
 
     if command == 'train':
         train()
