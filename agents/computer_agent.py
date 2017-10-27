@@ -59,6 +59,8 @@ class ComputerAgent(Agent):
     def get_best_move(self, model, state):
         state_np = state.get_np_value()
         act_value = model.predict(state_np)
+        logging.debug("Act value: ")
+        logging.debug('\n' + str(act_value))
 
         sorted_arg = np.argsort(act_value)[0]
         k = 1
@@ -66,9 +68,13 @@ class ComputerAgent(Agent):
             best_action = sorted_arg[self.action_size - k]
             if state.valid_move(best_action):
                 break
+            else:
+                logging.debug('Invalid action: ' + str(best_action))
 
             k += 1
 
+        logging.debug('k: ' + str(k))
+        logging.debug('Computer move: ' + str(best_action))
         return best_action, act_value[0][best_action]
 
     def replay(self, batch_size):
@@ -112,7 +118,7 @@ class ComputerAgent(Agent):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-        if len(self.memory) > 75000:
+        if len(self.memory) > 7500:
             print 'Memory is too large, cleaning'
             self.memory = batch
 

@@ -7,12 +7,12 @@ import logging
 
 EPISODES = 25000
 SIZE = 15
-BATCH_SIZE = 900
+BATCH_SIZE = 100
 
 
 def train():
     agent = ComputerAgent(SIZE)
-    print('Train with: ' + str(EPISODES) + ' episodes')
+    print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
     try:
         for i in range(EPISODES):
             print("Episode: " + str(i))
@@ -32,7 +32,7 @@ def test():
     human_agent = HumanAgent(SIZE)
     agent2 = ComputerAgent(SIZE)
 
-    agent2.load('./trained/agent.h5')
+    agent2.load('./trained/agent_interrupt.h5')
 
     human_agent.epsilon = 0
     agent2.epsilon = 0
@@ -46,8 +46,9 @@ def test():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Command, either train or test')
     parser.add_argument('command', type=str)
-    parser.add_argument('--log', type=str)
+    parser.add_argument('-l', '--log', type=str)
     parser.add_argument('-e', '--episodes', type=int)
+    parser.add_argument('-b', '--batch_size', type=int)
 
     args = parser.parse_args()
 
@@ -62,6 +63,9 @@ if __name__ == "__main__":
 
     if args.episodes:
         EPISODES = args.episodes
+
+    if args.batch_size:
+        BATCH_SIZE = args.batch_size
 
     if command == 'train':
         train()
