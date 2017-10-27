@@ -58,4 +58,4 @@ class Game:
                 print(str(self.state))
                 print ''
 
-        self.state.print_state()
+        print(str(self.state))

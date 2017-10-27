@@ -12,6 +12,3 @@ class HumanAgent(Agent):
 
         print 'Human move: ' + str(x) + ' ' + str(y)
         return int(x), int(y)
-
-    def replay(self, batch_size):
-        pass

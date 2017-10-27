@@ -6,7 +6,7 @@ import logging
 
 
 class State:
-    def __init__(self, size, board=None):
+    def __init__(self, size, board=None, turn=None):
         self.size = size
         self.action_size = self.size * self.size
         if board is None:
@@ -20,7 +20,7 @@ class State:
         self.occupied = 0
 
         # Player's turn that does the last move
-        self.turn = None
+        self.turn = turn
         self.win = False
 
     def next_state(self, action, turn):
@@ -28,8 +28,7 @@ class State:
         clone_board[action[0]][action[1]] = turn
         self.occupied += 1
 
-        next_state = State(15, clone_board)
-        next_state.turn = turn
+        next_state = State(15, clone_board, turn)
 
         next_state.rewards[turn] = next_state.get_reward(turn)
         next_state.rewards[3-turn] = next_state.get_reward(3-turn)
@@ -227,14 +226,6 @@ class State:
 
         return accumulate
 
-    def _clone_board(self):
-        to_return = [[0 for _ in range(self.size)] for _ in range(self.size)]
-        for i in range(self.size):
-            for j in range(self.size):
-                to_return[i][j] = self.board[i][j]
-
-        return to_return
-
     def get_np_value(self):
         return np.asarray(self.board).reshape(1, self.size*self.size)
 
@@ -242,11 +233,12 @@ class State:
         for i in range(self.size):
             for j in range(self.size):
                 value = self.board[i][j]
-                to_print = str(value)
                 if value == 1:
                     to_print = Fore.GREEN + str(value) + Style.RESET_ALL
-                if value == 2:
+                elif value == 2:
                     to_print = Fore.RED + str(value) + Style.RESET_ALL
+                else:
+                    to_print = '.'
 
                 sys.stdout.write(to_print + ' ')
 
@@ -254,22 +246,50 @@ class State:
 
     def __str__(self):
         to_return = ''
-        for i in range(self.size):
-            for j in range(self.size):
-                value = self.board[i][j]
+        for i in range (self.size + 1):
+            if i >= 1:
+                to_return += str((i-1) % 10)
+            else:
+                to_return += ' '
+            to_return += ' '
 
-                if value == 1:
-                    to_return += Fore.GREEN + str(value) + Style.RESET_ALL
-                elif value == 2:
-                    to_return += Fore.RED + str(value) + Style.RESET_ALL
+        to_return += '\n'
+
+        for i in range(self.size):
+            for j in range(self.size + 1):
+                if j == 0:
+                    to_return += str(i % 10)
+
                 else:
-                    to_return += str(value)
+                    value = self.board[i][j-1]
+
+                    if value == 1:
+                        to_return += Fore.GREEN + str(value) + Style.RESET_ALL
+                    elif value == 2:
+                        to_return += Fore.RED + str(value) + Style.RESET_ALL
+                    else:
+                        to_return += '.'
 
                 to_return += ' '
 
             to_return += '\n'
 
         return to_return
+
+    def possible_next_states(self):
+        opponent_turn = 3 - self.turn
+        possible_states = []
+
+        for i in range(self.size):
+            for j in range(self.size):
+                if self.board[i][j] == 0:
+                    new_board = self._clone_board()
+                    new_board[i][j] = opponent_turn
+                    new_state = State(self.size, new_board, opponent_turn)
+                    possible_states.append(new_state)
+
+        return possible_states
+
 
     def valid_move(self, move):
         i = move / 15
@@ -278,3 +298,11 @@ class State:
 
     def done(self):
         return self.finish
+
+    def _clone_board(self):
+        to_return = [[0 for _ in range(self.size)] for _ in range(self.size)]
+        for i in range(self.size):
+            for j in range(self.size):
+                to_return[i][j] = self.board[i][j]
+
+        return to_return

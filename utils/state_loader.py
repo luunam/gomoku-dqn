@@ -19,6 +19,6 @@ def convert_file_to_state(name):
                 elif board[i][j] == 'O':
                     board[i][j] = 2
 
-        state = State(size, board)
+        state = State(size, board=board)
 
         return state
