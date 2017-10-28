@@ -1,6 +1,6 @@
 from __future__ import print_function
 from game.game import Game
-from agents import HumanAgent, ComputerAgent
+from agents import HumanAgent, DQNAgent, MinimaxAgent
 from benchmark import Benchmarker
 import argparse
 import logging
@@ -11,7 +11,7 @@ BATCH_SIZE = 100
 
 
 def train():
-    agent = ComputerAgent(SIZE)
+    agent = DQNAgent(SIZE)
     print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
     try:
         for i in range(EPISODES):
@@ -30,7 +30,7 @@ def train():
 
 def test():
     human_agent = HumanAgent(SIZE)
-    agent2 = ComputerAgent(SIZE)
+    agent2 = MinimaxAgent(SIZE)
 
     agent2.load('./trained/agent_interrupt.h5')
 

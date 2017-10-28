@@ -9,7 +9,7 @@ import math
 import logging
 
 
-class ComputerAgent(Agent):
+class DQNAgent(Agent):
     def __init__(self, board_size):
         Agent.__init__(self, board_size)
         self.name = 'computer'

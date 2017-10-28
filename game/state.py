@@ -23,12 +23,25 @@ class State:
         self.turn = turn
         self.win = False
 
+        self.boundary = {
+            'maxX': 0,
+            'maxY': 0,
+            'minX': self.size-1,
+            'minY': self.size-1
+        }
+
+        self.last_action = None
+
+    def get_score(self):
+        return self.rewards[3-self.turn] - self.rewards[self.turn]
+
     def next_state(self, action, turn):
         clone_board = self._clone_board()
         clone_board[action[0]][action[1]] = turn
         self.occupied += 1
 
         next_state = State(15, clone_board, turn)
+        next_state.boundary = self._update_boundary(action)
 
         next_state.rewards[turn] = next_state.get_reward(turn)
         next_state.rewards[3-turn] = next_state.get_reward(3-turn)
@@ -37,6 +50,7 @@ class State:
             next_state.finish = True
 
         next_state.occupied = self.occupied
+        next_state.last_action = action
 
         return next_state
 
@@ -276,20 +290,22 @@ class State:
 
         return to_return
 
-    def possible_next_states(self):
+    def possible_next_states(self, use_boundary=False):
         opponent_turn = 3 - self.turn
         possible_states = []
 
-        for i in range(self.size):
-            for j in range(self.size):
+        max_i = self.size if not use_boundary else min(self.size, self.boundary['maxX'] + 2)
+        max_j = self.size if not use_boundary else min(self.size, self.boundary['maxY'] + 2)
+        min_i = 0 if not use_boundary else max(0, self.boundary['minX'] - 1)
+        min_j = 0 if not use_boundary else max(0, self.boundary['minY'] - 1)
+
+        for i in range(min_i, max_i):
+            for j in range(min_j, max_j):
                 if self.board[i][j] == 0:
-                    new_board = self._clone_board()
-                    new_board[i][j] = opponent_turn
-                    new_state = State(self.size, new_board, opponent_turn)
+                    new_state = self.next_state((i, j), opponent_turn)
                     possible_states.append(new_state)
 
         return possible_states
-
 
     def valid_move(self, move):
         i = move / 15
@@ -298,6 +314,14 @@ class State:
 
     def done(self):
         return self.finish
+
+    def _update_boundary(self, action):
+        return {
+            'maxX': max(self.boundary['maxX'], action[0]),
+            'minX': min(self.boundary['minX'], action[0]),
+            'maxY': max(self.boundary['maxY'], action[1]),
+            'minY': min(self.boundary['minY'], action[1])
+        }
 
     def _clone_board(self):
         to_return = [[0 for _ in range(self.size)] for _ in range(self.size)]
