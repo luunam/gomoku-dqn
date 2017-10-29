@@ -7,6 +7,7 @@ import random
 from random import randint
 import math
 import logging
+import time
 
 
 class DQNAgent(Agent):
@@ -23,7 +24,7 @@ class DQNAgent(Agent):
         self.duplicate_model.set_weights(self.model.get_weights())
 
         self.memory = []
-        self.gamma = 0.95
+        self.gamma = 0.5
 
         self.epsilon = 1
         self.epsilon_decay = 0.999
@@ -32,8 +33,7 @@ class DQNAgent(Agent):
     def _build_model(self):
         model = Sequential()
         model.add(Dense(225, input_dim=self.state_size, activation='sigmoid'))
-        model.add(Dense(225, activation='sigmoid'))
-        model.add(Dense(225, activation='sigmoid'))
+        model.add(Dense(225, input_dim=self.state_size, activation='sigmoid'))
         model.add(Dense(self.action_size, activation='sigmoid'))
 
         model.compile(loss='mse',
@@ -63,16 +63,16 @@ class DQNAgent(Agent):
         logging.debug('\n' + str(act_value))
 
         sorted_arg = np.argsort(act_value)[0]
+        # print str(sorted_arg)
         k = 1
         while k <= self.action_size:
             best_action = sorted_arg[self.action_size - k]
             if state.valid_move(best_action):
                 break
-            else:
-                logging.debug('Invalid action: ' + str(best_action))
 
             k += 1
 
+        # print 'k: ' + str(k)
         logging.debug('k: ' + str(k))
         logging.debug('Computer move: ' + str(best_action))
         return best_action, act_value[0][best_action]
@@ -93,6 +93,7 @@ class DQNAgent(Agent):
             logging.debug('Next state: ')
             logging.debug('\n' + str(next_state))
             logging.debug('')
+
             state_np = state.get_np_value()
 
             target = self.duplicate_model.predict(state_np)
@@ -110,6 +111,9 @@ class DQNAgent(Agent):
             logging.debug('Action value: ' + str(action_value))
             target[0][action_idx] = action_value
 
+            for already_move in state.moves:
+                target[0][already_move] = 0.5
+
             logging.debug('Target: ')
             logging.debug('\n' + str(target))
 
@@ -118,7 +122,7 @@ class DQNAgent(Agent):
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-        if len(self.memory) > 7500:
+        if len(self.memory) > 750:
             print 'Memory is too large, cleaning'
             self.memory = batch
 

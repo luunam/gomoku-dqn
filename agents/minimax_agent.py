@@ -1,10 +1,13 @@
 from agents.agent import Agent
+from threading import Thread
+import concurrent.futures
 
 
 class MinimaxAgent(Agent):
     def __init__(self, board_size):
         Agent.__init__(self, board_size)
         self.depth = 1
+        self.num_worker = 4
 
     def act(self, state):
         res = self.search(0, state, 0, -1000000, 1000000)
@@ -31,7 +34,7 @@ class MinimaxAgent(Agent):
 
             new_state = self.search(depth, state, 1, alpha, beta)
             # print 'new state score: ' + str(new_state.get_score())
-            if new_state.get_score() is not None and new_state.get_score() > v:
+            if new_state.get_score() > v:
                 v = new_state.get_score()
 
                 ret = state
@@ -42,11 +45,6 @@ class MinimaxAgent(Agent):
                 alpha = max(alpha, v)
 
             # print 'v: ' + str(v)
-
-        if ret is None:
-            print('ret max is null')
-            for i in range(len(possible_moves)):
-                print(possible_moves[i].get_score())
 
         return ret
 
@@ -62,7 +60,7 @@ class MinimaxAgent(Agent):
 
             new_state = self.search(depth + 1, state, 0, alpha, beta)
             # print 'new state score: ' + str(new_state.get_score())
-            if new_state.get_score() is not None and new_state.get_score() < v:
+            if new_state.get_score() < v:
                 v = new_state.get_score()
                 # print 'v: ' + str(v)
                 ret = state
@@ -71,10 +69,5 @@ class MinimaxAgent(Agent):
                     return ret
 
                 beta = min(beta, v)
-
-        if ret is None:
-            print('ret min is null')
-            for i in range(possible_moves):
-                print(possible_moves[i].get_score())
 
         return ret

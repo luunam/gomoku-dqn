@@ -3,10 +3,11 @@ import sys
 import numpy as np
 from colorama import Fore, Style
 import logging
+import copy
 
 
 class State:
-    def __init__(self, size, board=None, turn=None):
+    def __init__(self, size, board=None, turn=2):
         self.size = size
         self.action_size = self.size * self.size
         if board is None:
@@ -24,13 +25,14 @@ class State:
         self.win = False
 
         self.boundary = {
-            'maxX': 0,
-            'maxY': 0,
-            'minX': self.size-1,
-            'minY': self.size-1
+            'maxX': self.size - 1,
+            'maxY': self.size - 1,
+            'minX': 0,
+            'minY': 0
         }
 
         self.last_action = None
+        self.moves = []
 
     def get_score(self):
         return self.rewards[3-self.turn] - self.rewards[self.turn]
@@ -51,6 +53,10 @@ class State:
 
         next_state.occupied = self.occupied
         next_state.last_action = action
+
+        new_moves = copy.deepcopy(self.moves)
+        new_moves.append(action[0] * 15 + action[1])
+        next_state.moves = new_moves
 
         return next_state
 
@@ -241,7 +247,7 @@ class State:
         return accumulate
 
     def get_np_value(self):
-        return np.asarray(self.board).reshape(1, self.size*self.size)
+        return np.asarray(self.board).reshape(1, self.size*self.size) - 1
 
     def print_state(self):
         for i in range(self.size):

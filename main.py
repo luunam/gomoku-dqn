@@ -4,6 +4,8 @@ from agents import HumanAgent, DQNAgent, MinimaxAgent
 from benchmark import Benchmarker
 import argparse
 import logging
+import time
+
 
 EPISODES = 25000
 SIZE = 15
@@ -12,14 +14,27 @@ BATCH_SIZE = 100
 
 def train():
     agent = DQNAgent(SIZE)
+    benchmarker = Benchmarker()
     print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
     try:
-        for i in range(EPISODES):
-            print("Episode: " + str(i))
+        start = time.time()
+        for episode in range(EPISODES):
+            print("Episode: " + str(episode))
             new_game = Game(agent, agent)
             new_game.run()
 
             agent.replay(BATCH_SIZE)
+
+            file_name = 'agent_' + str(episode) + '.h5'
+
+            if episode % 500 == 0:
+                print('Time elapsed: ' + str(time.time() - start))
+                start = time.time()
+                agent.save('./trained/' + file_name)
+
+            if episode % 100 == 0:
+                score = benchmarker.rate(agent)
+                print('Rate: ' + str(score))
 
         agent.save('./trained/agent.h5')
 
@@ -30,17 +45,22 @@ def train():
 
 def test():
     human_agent = HumanAgent(SIZE)
-    agent2 = MinimaxAgent(SIZE)
+    dqn_agent = DQNAgent(SIZE)
+    minimax_agent = MinimaxAgent(SIZE)
 
-    agent2.load('./trained/agent_interrupt.h5')
+    benchmarker = Benchmarker()
+    rate = benchmarker.rate(minimax_agent)
 
-    human_agent.epsilon = 0
-    agent2.epsilon = 0
+    print('Rate: ' + str(rate))
+    # dqn_agent.load('./trained/agent.h5')
+    #
+    # human_agent.epsilon = 0
+    # dqn_agent.epsilon = 0
+    #
+    # new_game = Game(human_agent, dqn_agent, SIZE, True)
+    # new_game.run()
 
-    new_game = Game(human_agent, agent2, SIZE, True)
-    new_game.run()
-
-    agent2.replay(BATCH_SIZE)
+    # agent2.replay(BATCH_SIZE)
 
 
 if __name__ == "__main__":
