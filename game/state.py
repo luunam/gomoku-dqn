@@ -38,8 +38,13 @@ class State:
         return self.rewards[3-self.turn] - self.rewards[self.turn]
 
     def next_state(self, action, turn):
+        if not self.valid_move(action):
+            return self
+
         clone_board = self._clone_board()
-        clone_board[action[0]][action[1]] = turn
+        x = action / len(self.board)
+        y = action % len(self.board)
+        clone_board[x][y] = turn
         self.occupied += 1
 
         next_state = State(15, clone_board, turn)
@@ -55,7 +60,7 @@ class State:
         next_state.last_action = action
 
         new_moves = copy.deepcopy(self.moves)
-        new_moves.append(action[0] * 15 + action[1])
+        new_moves.append(action)
         next_state.moves = new_moves
 
         return next_state
@@ -77,18 +82,17 @@ class State:
 
         if self.finish:
             if self.winner == turn:
-                return 20
+                return 1
             else:
-                return 0
+                return -1
 
-        result['two'] = max(0, result['two'])
-        result['three'] = max(0, result['three'])
-        reward = 0.5 * result['three'] + 2 * result['open_three'] + 3 * result['four'] + 10 * result['open_four']
+        if self.last_action is not None and not self.valid_move(self.last_action):
+            return -1
 
-        if reward == 0:
-            return 0.1
+        if self.last_action is None:
+            print('None')
 
-        return reward
+        return 0
 
     def inspect(self, turn):
         accumulate = ''
@@ -322,11 +326,13 @@ class State:
         return self.finish
 
     def _update_boundary(self, action):
+        x = action / self.size
+        y = action % self.size
         return {
-            'maxX': max(self.boundary['maxX'], action[0]),
-            'minX': min(self.boundary['minX'], action[0]),
-            'maxY': max(self.boundary['maxY'], action[1]),
-            'minY': min(self.boundary['minY'], action[1])
+            'maxX': max(self.boundary['maxX'], x),
+            'minX': min(self.boundary['minX'], x),
+            'maxY': max(self.boundary['maxY'], y),
+            'minY': min(self.boundary['minY'], y)
         }
 
     def _clone_board(self):

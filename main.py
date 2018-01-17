@@ -48,19 +48,19 @@ def test():
     dqn_agent = DQNAgent(SIZE)
     minimax_agent = MinimaxAgent(SIZE)
 
-    benchmarker = Benchmarker()
-    rate = benchmarker.rate(minimax_agent)
-
-    print('Rate: ' + str(rate))
-    # dqn_agent.load('./trained/agent.h5')
+    # benchmarker = Benchmarker()
+    # rate = benchmarker.rate(minimax_agent)
     #
-    # human_agent.epsilon = 0
-    # dqn_agent.epsilon = 0
-    #
-    # new_game = Game(human_agent, dqn_agent, SIZE, True)
-    # new_game.run()
+    # print('Rate: ' + str(rate))
+    dqn_agent.load('./trained/agent_0.h5')
 
-    # agent2.replay(BATCH_SIZE)
+    human_agent.epsilon = 0
+    dqn_agent.epsilon = 0
+
+    new_game = Game(human_agent, dqn_agent, SIZE, True)
+    new_game.run()
+
+    dqn_agent.print_memory()
 
 
 if __name__ == "__main__":

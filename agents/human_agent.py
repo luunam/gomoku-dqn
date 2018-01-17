@@ -11,4 +11,4 @@ class HumanAgent(Agent):
         y = raw_input('y: ')
 
         print 'Human move: ' + str(x) + ' ' + str(y)
-        return int(x), int(y)
+        return int(x) * self.board_size + int(y)

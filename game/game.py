@@ -23,20 +23,28 @@ class Game:
         while not self.finish:
             action = self.agents[self.turn].act(self.state)
 
-            if action[0] == -1:
+            if action == -1:
                 print 'Game is Draw'
                 self.finish = True
                 break
 
-            next_state = self.state.next_state(action, self.turn)
+            repeat = False
+            if self.state.valid_move(action):
+                opponent_turn = 3 - self.turn
+                next_state = self.state.next_state(action, self.turn)
 
-            opponent_turn = 3 - self.turn
+            else:
+                repeat = True
+                next_state = self.state
+
             reward = next_state.rewards[self.turn]
             opponent_reward = next_state.rewards[opponent_turn]
             logging.debug('Reward for ' + str(self.turn) + ': ' + str(reward))
             opponent_reward = opponent_reward - reward
             logging.debug('Reward for ' + str(opponent_turn) + ': ' + str(opponent_reward))
 
+            # We want the next player to always be the number with token 1, it will make the AI easier to train, so if it
+            # is player 2 turn, we will flip the board
             if self.last_action is not None:
                 if self.turn == 1:
                     reflected_previous_state = self.previous_state.reflected_state()
@@ -49,7 +57,8 @@ class Game:
                                                         opponent_reward, next_state)
 
             self.last_action = action
-            self.previous_state = self.state
+            if not repeat:
+                self.previous_state = self.state
             self.state = next_state
             self.turn = opponent_turn
             self.finish = self.state.done()
