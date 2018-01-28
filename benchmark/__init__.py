@@ -1,1 +1,1 @@
-from benchmarker import Benchmarker
+from .benchmarker import Benchmarker

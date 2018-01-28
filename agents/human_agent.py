@@ -7,8 +7,8 @@ class HumanAgent(Agent):
         self.name = 'human'
 
     def act(self, state):
-        x = raw_input('x: ')
-        y = raw_input('y: ')
+        x = input('x: ')
+        y = input('y: ')
 
-        print 'Human move: ' + str(x) + ' ' + str(y)
+        print('Human move: ' + str(x) + ' ' + str(y))
         return int(x) * self.board_size + int(y)

@@ -1,6 +1,7 @@
-from state import State
+from .state import State
 from colorama import init
 import logging
+
 
 class Game:
     def __init__(self, agent1, agent2, size=15, test=False):
@@ -24,47 +25,27 @@ class Game:
             action = self.agents[self.turn].act(self.state)
 
             if action == -1:
-                print 'Game is Draw'
+                print('Game is Draw')
                 self.finish = True
                 break
 
-            repeat = False
             if self.state.valid_move(action):
                 opponent_turn = 3 - self.turn
-                next_state = self.state.next_state(action, self.turn)
+                next_state, reward = self.state.next_state(action, self.turn)
+                self.agents[self.turn].remember(reward)
 
             else:
-                repeat = True
                 next_state = self.state
-
-            reward = next_state.rewards[self.turn]
-            opponent_reward = next_state.rewards[opponent_turn]
-            logging.debug('Reward for ' + str(self.turn) + ': ' + str(reward))
-            opponent_reward = opponent_reward - reward
-            logging.debug('Reward for ' + str(opponent_turn) + ': ' + str(opponent_reward))
-
-            # We want the next player to always be the number with token 1, it will make the AI easier to train, so if it
-            # is player 2 turn, we will flip the board
-            if self.last_action is not None:
-                if self.turn == 1:
-                    reflected_previous_state = self.previous_state.reflected_state()
-                    reflected_next_state = next_state.reflected_state()
-
-                    self.agents[opponent_turn].remember(reflected_previous_state, self.last_action,
-                                                        opponent_reward, reflected_next_state)
-                else:
-                    self.agents[opponent_turn].remember(self.previous_state, self.last_action,
-                                                        opponent_reward, next_state)
+                self.agents[self.turn].remember(-1)
+                opponent_turn = self.turn
 
             self.last_action = action
-            if not repeat:
-                self.previous_state = self.state
             self.state = next_state
             self.turn = opponent_turn
             self.finish = self.state.done()
 
             if self.test:
                 print(str(self.state))
-                print ''
+                print()
 
         print(str(self.state))

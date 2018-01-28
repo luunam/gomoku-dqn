@@ -7,6 +7,7 @@ import random
 from random import randint
 import math
 import logging
+from game import State
 import time
 
 
@@ -29,6 +30,9 @@ class DQNAgent(Agent):
         self.epsilon = 1
         self.epsilon_decay = 0.999
         self.epsilon_min = 0.01
+        self.previous_state = None
+        self.last_action = None
+        self.last_reward = None
 
     def _build_model(self):
         model = Sequential()
@@ -41,7 +45,7 @@ class DQNAgent(Agent):
 
         return model
 
-    def act(self, state):
+    def act(self, state: 'State') -> int:
         # We will move randomly sometime to break out of local minimum
         if np.random.rand() <= self.epsilon:
             best_action = randint(0, self.action_size-1)
@@ -51,6 +55,11 @@ class DQNAgent(Agent):
         else:
             self.gamestate = state
             best_action, best_action_value = self.get_best_move(self.model, self.gamestate)
+
+        if self.previous_state is not None:
+            self.memory.append((self.previous_state, self.last_action, self.last_reward, state))
+        self.previous_state = state
+        self.last_action = best_action
 
         return best_action
 
@@ -114,7 +123,7 @@ class DQNAgent(Agent):
                 self.epsilon *= self.epsilon_decay
 
         if len(self.memory) > 750:
-            print 'Memory is too large, cleaning'
+            print('Memory is too large, cleaning')
             self.memory = batch
 
         self.duplicate_model.set_weights(self.model.get_weights())
@@ -123,7 +132,7 @@ class DQNAgent(Agent):
         # Print out memory, for debugging purpose
         for state, action, reward, next_state in self.memory:
             print('State: ' + '\n' + str(state))
-            x = action / state.size
+            x = action // state.size
             y = action % state.size
             print('Action: ' + '\n' + str(x) + ' ' + str(y))
             print('Reward: ' + '\n' + str(reward))
@@ -132,8 +141,8 @@ class DQNAgent(Agent):
     def sigmoid(self, x):
         return 1 / (1 + math.exp(-x/5.0))
 
-    def remember(self, state, action, reward, next_state):
-        self.memory.append((state, action, reward, next_state))
+    def remember(self, reward: int):
+        self.last_reward = reward
 
     def save(self, name):
         self.model.save_weights(name)

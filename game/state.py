@@ -11,7 +11,7 @@ class State:
         self.size = size
         self.action_size = self.size * self.size
         if board is None:
-            self.board = [[0 for x in range(self.size)] for y in range(self.size)]
+            self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
         else:
             self.board = board
 
@@ -34,24 +34,27 @@ class State:
         self.last_action = None
         self.moves = []
 
-    def get_score(self):
+    def get_score(self) -> int:
         return self.rewards[3-self.turn] - self.rewards[self.turn]
 
-    def next_state(self, action, turn):
+    def next_state(self, action: int, turn: int) -> ('State', int):
+        """
+        Return the next state and reward given the action and the turn of the player that just move
+        :param action:
+        :param turn: Turn of the player that gives action
+        :return: The next state and the reward
+        """
         if not self.valid_move(action):
-            return self
+            return self, -1
 
         clone_board = self._clone_board()
-        x = action / len(self.board)
+        x = action // len(self.board)
         y = action % len(self.board)
         clone_board[x][y] = turn
         self.occupied += 1
 
         next_state = State(15, clone_board, turn)
         next_state.boundary = self._update_boundary(action)
-
-        next_state.rewards[turn] = next_state.get_reward(turn)
-        next_state.rewards[3-turn] = next_state.get_reward(3-turn)
 
         if self.occupied == self.action_size:
             next_state.finish = True
@@ -63,9 +66,9 @@ class State:
         new_moves.append(action)
         next_state.moves = new_moves
 
-        return next_state
+        return next_state, next_state.get_reward(turn)
 
-    def reflected_state(self):
+    def reflected_state(self) -> 'State':
         clone_board = self._clone_board()
         for i in range(self.size):
             for j in range(self.size):
@@ -76,7 +79,7 @@ class State:
 
         return State(15, clone_board)
 
-    def get_reward(self, turn):
+    def get_reward(self, turn: int) -> int:
         result = self.inspect(turn)
         logging.debug('Result for ' + str(turn) + ': ' + str(result))
 
@@ -94,8 +97,9 @@ class State:
 
         return 0
 
-    def inspect(self, turn):
+    def inspect(self, turn: int) -> dict:
         accumulate = ''
+
         result = {
             'three': 0,
             'open_three': 0,
@@ -128,7 +132,7 @@ class State:
             result['five'] = 1
             return result
 
-        # Traverse sum diagonal (diagonal that i+j are equal)
+        # Traverse sum diagonal (diagonal whose i+j are constant)
         for sum_indices in range(0, 2*self.size - 1):
             x_max = min(sum_indices, self.size - 1)
             x_min = max(0, sum_indices - self.size + 1)
@@ -142,7 +146,7 @@ class State:
             result['five'] = 1
             return result
 
-        # Traverse diff diagonal:
+        # Traverse diff diagonal (diagonal whose i+j are constant):
         for diff in range(-(self.size - 1), self.size):
             x_max = min(self.size-1, self.size + diff - 1)
             x_min = max(0, diff)
@@ -158,7 +162,7 @@ class State:
 
         return result
 
-    def evaluate(self, i, j, accumulate, turn, result):
+    def evaluate(self, i: int, j: int, accumulate: str, turn: int, result: dict) -> str:
         if self.board[i][j] == turn:
             accumulate += 'x'
         elif self.board[i][j] == 0:
@@ -250,8 +254,8 @@ class State:
 
         return accumulate
 
-    def get_np_value(self):
-        return np.asarray(self.board).reshape(1, self.size*self.size) - 1
+    def get_np_value(self) -> np.ndarray:
+        return np.asarray(self.board).reshape(1, self.size * self.size) - 1
 
     def print_state(self):
         for i in range(self.size):
@@ -300,7 +304,7 @@ class State:
 
         return to_return
 
-    def possible_next_states(self, use_boundary=False):
+    def possible_next_states(self, use_boundary=False) -> list:
         opponent_turn = 3 - self.turn
         possible_states = []
 
@@ -312,21 +316,21 @@ class State:
         for i in range(min_i, max_i):
             for j in range(min_j, max_j):
                 if self.board[i][j] == 0:
-                    new_state = self.next_state((i, j), opponent_turn)
+                    new_state = self.next_state(i * self.size + j, opponent_turn)
                     possible_states.append(new_state)
 
         return possible_states
 
-    def valid_move(self, move):
-        i = move / 15
+    def valid_move(self, move: int) -> bool:
+        i = move // 15
         j = move % 15
         return self.board[i][j] == 0
 
-    def done(self):
+    def done(self) -> bool:
         return self.finish
 
-    def _update_boundary(self, action):
-        x = action / self.size
+    def _update_boundary(self, action: int) -> dict:
+        x = action // self.size
         y = action % self.size
         return {
             'maxX': max(self.boundary['maxX'], x),
@@ -335,7 +339,7 @@ class State:
             'minY': min(self.boundary['minY'], y)
         }
 
-    def _clone_board(self):
+    def _clone_board(self) -> list:
         to_return = [[0 for _ in range(self.size)] for _ in range(self.size)]
         for i in range(self.size):
             for j in range(self.size):

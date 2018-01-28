@@ -10,7 +10,7 @@ class Agent:
     def replay(self, batch_size):
         pass
 
-    def remember(self, state, action, reward, next_state):
+    def remember(self, reward):
         pass
 
     def save(self, name):

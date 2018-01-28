@@ -22,11 +22,11 @@ class Benchmarker:
             action = agent.act(test['state'])
             x = action / test['state'].size
             y = action % test['state'].size
-            print 'Test ' + str(i) + ': Agent move ' + str(x) + ', ' + str(y)
+            print('Test ' + str(i) + ': Agent move ' + str(x) + ', ' + str(y))
             for expected_move in test['expected_move']:
                 if self.move_equal(x, y, expected_move[0], expected_move[1]):
                     score += 1
-                    print 'Pass test ' + str(i)
+                    print('Pass test ' + str(i))
                     break
 
         return score
