@@ -14,7 +14,6 @@ BATCH_SIZE = 100
 
 def train():
     agent = DQNAgent(SIZE)
-    benchmarker = Benchmarker()
     print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
     try:
         start = time.time()
@@ -31,10 +30,6 @@ def train():
                 print('Time elapsed: ' + str(time.time() - start))
                 start = time.time()
                 agent.save('./trained/' + file_name)
-
-            if episode % 100 == 0:
-                score = benchmarker.rate(agent)
-                print('Rate: ' + str(score))
 
         agent.save('./trained/agent.h5')
 

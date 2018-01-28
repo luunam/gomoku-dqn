@@ -48,4 +48,8 @@ class Game:
                 print(str(self.state))
                 print()
 
+        self.agents[self.turn].remember(-1)
+        self.agents[self.turn].observe(self.state)
+
+        print('Winner: ' + str(3 - self.turn))
         print(str(self.state))

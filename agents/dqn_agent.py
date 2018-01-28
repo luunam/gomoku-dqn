@@ -8,7 +8,6 @@ from random import randint
 import math
 import logging
 from game import State
-import time
 
 
 class DQNAgent(Agent):
@@ -46,6 +45,7 @@ class DQNAgent(Agent):
         return model
 
     def act(self, state: 'State') -> int:
+        self.observe(state)
         # We will move randomly sometime to break out of local minimum
         if np.random.rand() <= self.epsilon:
             best_action = randint(0, self.action_size-1)
@@ -56,8 +56,6 @@ class DQNAgent(Agent):
             self.gamestate = state
             best_action, best_action_value = self.get_best_move(self.model, self.gamestate)
 
-        if self.previous_state is not None:
-            self.memory.append((self.previous_state, self.last_action, self.last_reward, state))
         self.previous_state = state
         self.last_action = best_action
 
@@ -152,3 +150,7 @@ class DQNAgent(Agent):
         self.duplicate_model.load_weights(name)
         logging.debug('Model weights: ')
         logging.debug('\n' + str(self.model.get_weights()))
+
+    def observe(self, state):
+        if self.previous_state is not None:
+            self.memory.append((self.previous_state, self.last_action, self.last_reward, state))

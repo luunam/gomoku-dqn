@@ -89,9 +89,6 @@ class State:
             else:
                 return -1
 
-        if self.last_action is not None and not self.valid_move(self.last_action):
-            return -1
-
         if self.last_action is None:
             print('None')
 

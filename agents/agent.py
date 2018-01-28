@@ -18,3 +18,6 @@ class Agent:
 
     def load(self, name):
         pass
+
+    def observe(self, state):
+        pass
