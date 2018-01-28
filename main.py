@@ -13,29 +13,35 @@ BATCH_SIZE = 100
 
 
 def train():
-    agent = DQNAgent(SIZE)
+    agent1 = DQNAgent(SIZE)
+    agent2 = DQNAgent(SIZE)
     print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
     try:
         start = time.time()
         for episode in range(EPISODES):
             print("Episode: " + str(episode))
-            new_game = Game(agent, agent)
+            new_game = Game(agent1, agent2)
             new_game.run()
 
-            agent.replay(BATCH_SIZE)
+            agent1.replay(BATCH_SIZE)
+            agent2.replay(BATCH_SIZE)
 
-            file_name = 'agent_' + str(episode) + '.h5'
+            file_name1 = 'agent1_' + str(episode) + '.h5'
+            file_name2 = 'agent2_' + str(episode) + '.h5'
 
-            if episode % 500 == 0:
+            if episode % 50 == 0:
                 print('Time elapsed: ' + str(time.time() - start))
                 start = time.time()
-                agent.save('./trained/' + file_name)
+                agent1.save('./trained/' + file_name1)
+                agent2.save('./trained/' + file_name2)
 
-        agent.save('./trained/agent.h5')
+        agent1.save('./trained/agent1.h5')
+        agent2.save('./trained/agent2.h5')
 
     except KeyboardInterrupt:
         print('Key board interrupt, emergency save')
-        agent.save('./trained/agent_interrupt.h5')
+        agent1.save('./trained/agent1_interrupt.h5')
+        agent2.save('./trained/agent2_interrupt.h5')
 
 
 def test():
