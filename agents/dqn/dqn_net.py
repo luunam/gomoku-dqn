@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import torch
-from game import State
+from game.state import State
 import numpy as np
 
 
@@ -34,7 +34,7 @@ class DQNNet(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
-        return F.softmax(x, dim=1)
+        return F.log_softmax(x, dim=1)
 
     def fit_single_data(self, data: torch.FloatTensor, target: torch.FloatTensor) -> float:
         """
@@ -48,7 +48,7 @@ class DQNNet(nn.Module):
         self.optimizer.zero_grad()
         y = self(data)
 
-        loss = F.nll_loss(y, target)
+        loss = F.mse_loss(y, target)
         loss.backward()
         self.optimizer.step()
 
@@ -72,6 +72,23 @@ class DQNNet(nn.Module):
 
             avg_loss = epoch_loss / len(data_loader.dataset)
 
+    @staticmethod
+    def state_to_tensor(state: State):
+        state_np = np.asarray(state.board).reshape(1, state.size * state.size) - 1
+
+        state_tensor = torch.from_numpy(state_np)
+
+        # assume that the board is 15 * 15
+        # TODO: change 15 to board size here
+        state_tensor = state_tensor.view(1, 1, 15, 15)
+        return state_tensor
+
+    @staticmethod
+    def state_to_variable(state: State):
+        state_tensor = DQNNet.state_to_tensor(state)
+        state_var = Variable(state_tensor).type(torch.FloatTensor)
+        return state_var
+
     def predict(self, state: State) -> Variable:
         """
         Predict the value of the given state based on
@@ -81,14 +98,16 @@ class DQNNet(nn.Module):
         :return: A Variable of LongTensor with size 1 * 225, containing values for each move,
                  with all illegal moves have value 0
         """
-        state_var = state.get_pytorch_variable()
+        state_var = DQNNet.state_to_variable(state)
+
         # assume that the board is 15 * 15
         # TODO: change 15 to board size here
 
         state_var_reshape = state_var.view(1, 1, 15, 15)
         act_value = self(state_var_reshape)  # type: Variable
 
+        min_act_value = torch.min(act_value).data[0]
         # Set every illegal moves to have value 0
-        act_value[state_var > 0] = 0
+        act_value[state_var > -1] = min_act_value - 1
 
         return act_value

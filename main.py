@@ -16,15 +16,19 @@ def train():
     agent1 = DQNAgent(SIZE)
     agent2 = DQNAgent(SIZE)
     print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
+
+    player_train = 0
     try:
         start = time.time()
         for episode in range(EPISODES):
             print("Episode: " + str(episode))
-            new_game = Game(agent1, agent2)
+            new_game = Game(agent1, agent2, test=False)
             new_game.run()
 
-            agent1.replay(BATCH_SIZE)
-            agent2.replay(BATCH_SIZE)
+            if player_train == 0:
+                agent1.replay(BATCH_SIZE)
+            else:
+                agent2.replay(BATCH_SIZE)
 
             file_name1 = 'agent1_' + str(episode) + '.h5'
             file_name2 = 'agent2_' + str(episode) + '.h5'
@@ -32,6 +36,7 @@ def train():
             if episode % 50 == 0:
                 print('Time elapsed: ' + str(time.time() - start))
                 start = time.time()
+                player_train = 1 - player_train
                 agent1.save('./trained/' + file_name1)
                 agent2.save('./trained/' + file_name2)
 
@@ -47,14 +52,14 @@ def train():
 def test():
     human_agent = HumanAgent(SIZE)
     dqn_agent = DQNAgent(SIZE)
+    dqn_agent_2 = DQNAgent(SIZE)
 
     human_agent.epsilon = 0
     dqn_agent.epsilon = 0
+    dqn_agent_2.epsilon = 0
 
-    new_game = Game(human_agent, dqn_agent, SIZE, True)
+    new_game = Game(dqn_agent, dqn_agent_2, SIZE, True)
     new_game.run()
-
-    dqn_agent.print_memory()
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ import random
 import logging
 from .dqn_net import DQNNet
 
-from game import State
+from game.state import State
 
 
 class DQNAgent(Agent):
@@ -31,6 +31,10 @@ class DQNAgent(Agent):
 
     def act(self, observation: State, reward: int, done: bool) -> int:
         if done:
+            # If done is true that means we lose the game
+            self.remember(-1, observation, done)
+
+            # Whatever we return here is not important anymore
             return -1
         else:
             self.remember(reward, observation, done)
@@ -42,7 +46,7 @@ class DQNAgent(Agent):
 
             return best_move
 
-    def remember(self, reward, next_state, done):
+    def remember(self, reward: int, next_state: State, done: bool):
         if self.last_state is not None and self.last_action is not None:
             if len(self.memory) > 1000:
                 self.memory = random.sample(self.memory, 500)
@@ -67,7 +71,7 @@ class DQNAgent(Agent):
         max_value, max_value_idx = torch.max(act_value, 1)
         max_value = max_value.data[0]
         max_value_idx = max_value_idx.data[0]
-        print('Best move: {}, ({}, {})'.format(max_value, max_value_idx // 15, max_value_idx % 15))
+        # print('Best move: {}, ({}, {})'.format(max_value, max_value_idx // 15, max_value_idx % 15))
         return max_value, max_value_idx
 
     def replay(self, batch_size: int):
@@ -91,12 +95,12 @@ class DQNAgent(Agent):
 
             target[0, action] = q_value
 
-            self.model.fit_single_data(state, target)
+            self.model.fit_single_data(DQNNet.state_to_tensor(state), target.data)
 
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-        self.duplicate_model.set_weights(self.model.get_weights())
+        self.duplicate_model = copy.deepcopy(self.model)
 
     @staticmethod
     def log_batch(state, action, reward, next_state):

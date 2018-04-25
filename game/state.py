@@ -65,7 +65,7 @@ class State:
         next_state.last_action = action
         next_state.boundary = self._update_boundary(action)
 
-        return next_state, reward, done
+        return next_state, 0, done
 
     def reflected_state(self) -> 'State':
         clone_board = self._clone_board()
@@ -256,17 +256,6 @@ class State:
                 result['two'] += 1
 
         return accumulate
-
-    def get_np_value(self) -> np.ndarray:
-        """
-        Convert
-        :return: a 2 dimensional np array contains only -1, 0, 1 with shape (1, 225)
-        """
-        return np.asarray(self.board).reshape(1, self.size * self.size) - 1
-
-    def get_pytorch_variable(self):
-        np_array = self.get_np_value()
-        return Variable(torch.from_numpy(np_array)).type(torch.FloatTensor)
 
     def print_state(self):
         for i in range(self.size):
