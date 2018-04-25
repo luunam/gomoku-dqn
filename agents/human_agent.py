@@ -6,7 +6,7 @@ class HumanAgent(Agent):
         Agent.__init__(self, board_size)
         self.name = 'human'
 
-    def act(self, state):
+    def act(self, state, reward, done):
         x = input('x: ')
         y = input('y: ')
 

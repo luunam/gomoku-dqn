@@ -1,6 +1,4 @@
 from agents.agent import Agent
-from threading import Thread
-import concurrent.futures
 
 
 class MinimaxAgent(Agent):
@@ -9,7 +7,7 @@ class MinimaxAgent(Agent):
         self.depth = 1
         self.num_worker = 4
 
-    def act(self, state):
+    def act(self, state, reward, done):
         res = self.search(0, state, 0, -1000000, 1000000)
         return res.last_action
 

@@ -47,13 +47,6 @@ def train():
 def test():
     human_agent = HumanAgent(SIZE)
     dqn_agent = DQNAgent(SIZE)
-    minimax_agent = MinimaxAgent(SIZE)
-
-    # benchmarker = Benchmarker()
-    # rate = benchmarker.rate(minimax_agent)
-    #
-    # print('Rate: ' + str(rate))
-    dqn_agent.load('./trained/agent_0.h5')
 
     human_agent.epsilon = 0
     dqn_agent.epsilon = 0

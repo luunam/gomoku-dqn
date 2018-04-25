@@ -1,9 +1,9 @@
-import random
 import sys
 import numpy as np
 from colorama import Fore, Style
-import logging
 import copy
+import torch
+from torch.autograd import Variable
 
 
 class State:
@@ -32,41 +32,40 @@ class State:
         }
 
         self.last_action = None
-        self.moves = []
 
     def get_score(self) -> int:
         return self.rewards[3-self.turn] - self.rewards[self.turn]
 
-    def next_state(self, action: int, turn: int) -> ('State', int):
+    def step(self, action: int) -> ('State', int, bool):
         """
-        Return the next state and reward given the action and the turn of the player that just move
+        Return the next state and reward given the action and the turn of the player that just move. The reward here is the
+        reward for the NEXT player, and not the player that just executes the move
+
         :param action:
-        :param turn: Turn of the player that gives action
-        :return: The next state and the reward
+        :return: The next state, reward, and whether the game is done
         """
         if not self.valid_move(action):
-            return self, -1
+            x, y = self.convert_to_move(action)
+            print('Not valid move {}, {}'.format(x, y))
+            return self, -1, False
 
         clone_board = self._clone_board()
         x = action // len(self.board)
         y = action % len(self.board)
-        clone_board[x][y] = turn
-        self.occupied += 1
 
-        next_state = State(15, clone_board, turn)
+        current_turn = 3 - self.turn
+        clone_board[x][y] = current_turn
+
+        next_state = State(15, clone_board, current_turn)
+        _, done = next_state.get_reward(current_turn)
+        next_turn = 3-current_turn
+        reward, _ = next_state.get_reward(next_turn)
+
+        next_state.occupied = self.occupied + 1
+        next_state.last_action = action
         next_state.boundary = self._update_boundary(action)
 
-        if self.occupied == self.action_size:
-            next_state.finish = True
-
-        next_state.occupied = self.occupied
-        next_state.last_action = action
-
-        new_moves = copy.deepcopy(self.moves)
-        new_moves.append(action)
-        next_state.moves = new_moves
-
-        return next_state, next_state.get_reward(turn)
+        return next_state, reward, done
 
     def reflected_state(self) -> 'State':
         clone_board = self._clone_board()
@@ -79,22 +78,29 @@ class State:
 
         return State(15, clone_board)
 
-    def get_reward(self, turn: int) -> int:
+    def get_reward(self, turn: int) -> (int, bool):
+        """
+        Get reward for player with the given turn
+        :param turn: the turn of the given player
+        :return: reward and whether the game is done
+        """
         result = self.inspect(turn)
-        logging.debug('Result for ' + str(turn) + ': ' + str(result))
+        total = 0
+        for k in result:
+            total += result[k]
 
-        if self.finish:
-            if self.winner == turn:
-                return 1
-            else:
-                return -1
-
-        if self.last_action is None:
-            print('None')
-
-        return 0
+        done = result['five'] > 0 or self.occupied == self.size * self.size
+        if total > 0:
+            return 1, done
+        else:
+            return -1, done
 
     def inspect(self, turn: int) -> dict:
+        """
+        Inspect the current board, return the information on how many connected strings are made
+        :param turn:
+        :return:
+        """
         accumulate = ''
 
         result = {
@@ -252,7 +258,15 @@ class State:
         return accumulate
 
     def get_np_value(self) -> np.ndarray:
+        """
+        Convert
+        :return: a 2 dimensional np array contains only -1, 0, 1 with shape (1, 225)
+        """
         return np.asarray(self.board).reshape(1, self.size * self.size) - 1
+
+    def get_pytorch_variable(self):
+        np_array = self.get_np_value()
+        return Variable(torch.from_numpy(np_array)).type(torch.FloatTensor)
 
     def print_state(self):
         for i in range(self.size):
@@ -325,6 +339,9 @@ class State:
 
     def done(self) -> bool:
         return self.finish
+
+    def convert_to_move(self, n: int) -> (int, int):
+        return n // self.size, n % self.size
 
     def _update_boundary(self, action: int) -> dict:
         x = action // self.size
