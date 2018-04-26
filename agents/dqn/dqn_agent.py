@@ -1,5 +1,6 @@
 from agents.agent import Agent
 import torch
+from torch.autograd import Variable
 
 import copy
 import random
@@ -13,8 +14,6 @@ class DQNAgent(Agent):
     def __init__(self, board_size):
         Agent.__init__(self, board_size)
 
-        self.learning_rate = 0.05
-
         self.model = DQNNet()
         self.duplicate_model = copy.deepcopy(self.model)
 
@@ -22,7 +21,7 @@ class DQNAgent(Agent):
         self.gamma = 0.5
 
         self.epsilon = 1
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = 0.99
         self.epsilon_min = 0.01
 
         self.last_action = None
@@ -53,7 +52,7 @@ class DQNAgent(Agent):
 
             self.memory.append((self.last_state, self.last_action, reward, next_state, done))
 
-    def find_best_move(self, state: State, model: DQNNet=None) -> (int, int):
+    def find_best_move(self, state: State, model: DQNNet=None) -> (float, int):
         """
         Find the best legal move given a state of the game
 
@@ -69,10 +68,22 @@ class DQNAgent(Agent):
 
         act_value = model.predict(state)
         max_value, max_value_idx = torch.max(act_value, 1)
+
+        if random.uniform(0, 1) < self.epsilon:
+            return self.find_random_move(act_value)
+
         max_value = max_value.data[0]
         max_value_idx = max_value_idx.data[0]
         # print('Best move: {}, ({}, {})'.format(max_value, max_value_idx // 15, max_value_idx % 15))
         return max_value, max_value_idx
+
+    def find_random_move(self, act_value: Variable) -> (float, int):
+        min_value, _ = torch.min(act_value, 1)
+        min_value = min_value.data[0]
+        while True:
+            random_move = random.randint(0, 224)
+            if act_value[0, random_move].data[0] != min_value:
+                return act_value[0, random_move].data[0], random_move
 
     def replay(self, batch_size: int):
         if batch_size < len(self.memory):

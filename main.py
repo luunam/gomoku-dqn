@@ -5,6 +5,7 @@ from benchmark import Benchmarker
 import argparse
 import logging
 import time
+import os
 
 
 EPISODES = 25000
@@ -18,6 +19,10 @@ def train():
     print('Train with: ' + str(EPISODES) + ' episodes and batch size: ' + str(BATCH_SIZE))
 
     player_train = 0
+
+    if not os.path.exists('./trained'):
+        os.makedirs('./trained')
+
     try:
         start = time.time()
         for episode in range(EPISODES):
@@ -30,13 +35,18 @@ def train():
             else:
                 agent2.replay(BATCH_SIZE)
 
-            file_name1 = 'agent1_' + str(episode) + '.h5'
-            file_name2 = 'agent2_' + str(episode) + '.h5'
+            file_name1 = 'agent1.h5'
+            file_name2 = 'agent2.h5'
 
             if episode % 50 == 0:
                 print('Time elapsed: ' + str(time.time() - start))
                 start = time.time()
                 player_train = 1 - player_train
+                if os.path.isfile('./trained/agent1.h5'):
+                    os.remove('./trained/agent1.h5')
+                if os.path.isfile('./trained/agent2.h5'):
+                    os.remove('./trained/agent2.h5')
+
                 agent1.save('./trained/' + file_name1)
                 agent2.save('./trained/' + file_name2)
 
@@ -58,6 +68,8 @@ def test():
     dqn_agent.epsilon = 0
     dqn_agent_2.epsilon = 0
 
+    dqn_agent.load('./trained/agent1_24950.h5')
+    dqn_agent_2.load('./trained/agent2_24950.h5')
     new_game = Game(dqn_agent, dqn_agent_2, SIZE, True)
     new_game.run()
 

@@ -46,7 +46,7 @@ class State:
         """
         if not self.valid_move(action):
             x, y = self.convert_to_move(action)
-            print('Not valid move {}, {}'.format(x, y))
+            print('Invalid move {}, {}'.format(x, y))
             return self, -1, False
 
         clone_board = self._clone_board()
