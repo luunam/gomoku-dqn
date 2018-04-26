@@ -68,10 +68,10 @@ def test():
     dqn_agent.epsilon = 0
     dqn_agent_2.epsilon = 0
 
-    dqn_agent.load('./trained/agent1_24950.h5')
-    dqn_agent_2.load('./trained/agent2_24950.h5')
-    new_game = Game(dqn_agent, dqn_agent_2, SIZE, True)
+    new_game = Game(dqn_agent, human_agent, SIZE, True)
     new_game.run()
+
+    dqn_agent.print_memory()
 
 
 if __name__ == "__main__":

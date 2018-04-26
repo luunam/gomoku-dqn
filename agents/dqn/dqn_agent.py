@@ -8,6 +8,7 @@ import logging
 from .dqn_net import DQNNet
 
 from game.state import State
+from .memory import Memory
 
 
 class DQNAgent(Agent):
@@ -17,7 +18,7 @@ class DQNAgent(Agent):
         self.model = DQNNet()
         self.duplicate_model = copy.deepcopy(self.model)
 
-        self.memory = []
+        self.memory = Memory()
         self.gamma = 0.5
 
         self.epsilon = 1
@@ -47,10 +48,7 @@ class DQNAgent(Agent):
 
     def remember(self, reward: int, next_state: State, done: bool):
         if self.last_state is not None and self.last_action is not None:
-            if len(self.memory) > 1000:
-                self.memory = random.sample(self.memory, 500)
-
-            self.memory.append((self.last_state, self.last_action, reward, next_state, done))
+            self.memory.queue((self.last_state, self.last_action, reward, next_state, done))
 
     def find_best_move(self, state: State, model: DQNNet=None) -> (float, int):
         """
@@ -86,32 +84,31 @@ class DQNAgent(Agent):
                 return act_value[0, random_move].data[0], random_move
 
     def replay(self, batch_size: int):
-        if batch_size < len(self.memory):
-            batch = random.sample(self.memory, batch_size)
-        else:
-            batch = self.memory
+        batch = self.memory.sample(batch_size)
 
         logging.debug('Replaying: ')
-
+        batch_error = 0
         for state, action, reward, next_state, done in batch:
             self.log_batch(state, action, reward, next_state)
 
-            target = self.duplicate_model.predict(state)
+            target = self.model.predict(state)
 
             if done:
                 q_value = reward
             else:
-                _, best_action_value = self.find_best_move(next_state, self.duplicate_model)
+                _, best_action_value = self.find_best_move(next_state)
                 q_value = reward + self.gamma * best_action_value
 
             target[0, action] = q_value
 
-            self.model.fit_single_data(DQNNet.state_to_tensor(state), target.data)
+            batch_error += self.duplicate_model.fit_single_data(DQNNet.state_to_tensor(state), target.data)
 
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-        self.duplicate_model = copy.deepcopy(self.model)
+        print('Batch average error: {}'.format(batch_error // batch_size))
+
+        self.model = copy.deepcopy(self.duplicate_model)
 
     @staticmethod
     def log_batch(state, action, reward, next_state):
@@ -122,16 +119,10 @@ class DQNAgent(Agent):
 
     def print_memory(self):
         """
-        Print memory of this agent, for debugging purpose only
+        Print memory.py of this agent, for debugging purpose only
         """
         print('Memory size {}'.format(len(self.memory)))
-        for state, action, reward, next_state, done in self.memory:
-            print('State: ' + '\n' + str(state))
-            x = action // 15
-            y = action % 15
-            print('Action: ' + '\n' + str(x) + ' ' + str(y))
-            print('Reward: ' + '\n' + str(reward))
-            print('Next state: ' + '\n' + str(next_state))
+        print(self.memory)
 
     def save(self, name: str):
         torch.save(self.model.state_dict(), name)
@@ -139,11 +130,3 @@ class DQNAgent(Agent):
     def load(self, name: str):
         self.model.load_state_dict(torch.load(name))
         self.duplicate_model = copy.deepcopy(self.model)
-
-
-class Memory:
-    def __init__(self):
-        pass
-
-
-

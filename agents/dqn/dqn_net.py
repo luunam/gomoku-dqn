@@ -18,7 +18,7 @@ class DQNNet(nn.Module):
         # Size image is now (7 - 2 + 1) = 6
         self.conv2 = nn.Conv2d(10, 20, kernel_size=2)
 
-        # 800 because it is equal to 10 * 10 * 8
+        # 720 = 6 * 6 * 20, 400 is a completely random number
         self.fc1 = nn.Linear(720, 400)
         self.fc2 = nn.Linear(400, 225)
 
@@ -73,7 +73,13 @@ class DQNNet(nn.Module):
             avg_loss = epoch_loss / len(data_loader.dataset)
 
     @staticmethod
-    def state_to_tensor(state: State):
+    def state_to_tensor(state: State) -> torch.Tensor:
+        """
+        Convert state to pytorch tensor
+
+        :param state:
+        :return:
+        """
         state_np = np.asarray(state.board).reshape(1, state.size * state.size) - 1
 
         state_tensor = torch.from_numpy(state_np)
@@ -84,7 +90,13 @@ class DQNNet(nn.Module):
         return state_tensor
 
     @staticmethod
-    def state_to_variable(state: State):
+    def state_to_variable(state: State) -> Variable:
+        """
+        Convert state to pytorch variable
+
+        :param state:
+        :return:
+        """
         state_tensor = DQNNet.state_to_tensor(state)
         state_var = Variable(state_tensor).type(torch.FloatTensor)
         return state_var
