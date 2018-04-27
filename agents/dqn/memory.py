@@ -8,7 +8,7 @@ class Memory:
         self.ephemeral_storage = deque()
         self.permanent_storage = deque()
         self.max_length = max_length
-        self.stack_size = 2
+        self.stack_size = 1
 
     def queue(self, memory):
         _, _, _, _, done = memory
@@ -31,7 +31,7 @@ class Memory:
                 merged_mem = self.merge(val, self.ephemeral_storage[idx+self.stack_size])
                 self.queue_permanent_storage(merged_mem)
 
-        self.ephemeral_storage = deque()
+        self.ephemeral_storage.clear()
 
     def merge(self, mem1, mem2):
         state1, action1, reward1, next_state1, done1 = mem1

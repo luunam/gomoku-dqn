@@ -22,13 +22,11 @@ class DQNNet(nn.Module):
         self.fc1 = nn.Linear(720, 400)
         self.fc2 = nn.Linear(400, 225)
 
-        self.conv2_drop = nn.Dropout2d()
-
         self.optimizer = optim.RMSprop(self.parameters(), lr=0.01)
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(self.conv2_drop(self.conv2(x)))
+        x = F.relu(self.conv2(x))
 
         x = x.view(-1, 720)
         x = F.relu(self.fc1(x))
@@ -120,6 +118,6 @@ class DQNNet(nn.Module):
 
         min_act_value = torch.min(act_value).data[0]
         # Set every illegal moves to have value 0
-        act_value[state_var > -1] = min_act_value - 1
+        act_value[state_var > -1] = min_act_value
 
         return act_value

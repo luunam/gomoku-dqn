@@ -29,6 +29,10 @@ class DQNAgent(Agent):
         self.last_reward = None
         self.last_state = None
 
+    def prepare_for_new_game(self):
+        self.last_state = None
+        self.last_action = None
+
     def act(self, observation: State, reward: int, done: bool) -> int:
         if done:
             # If done is true that means we lose the game
@@ -49,6 +53,7 @@ class DQNAgent(Agent):
     def remember(self, reward: int, next_state: State, done: bool):
         if self.last_state is not None and self.last_action is not None:
             self.memory.queue((self.last_state, self.last_action, reward, next_state, done))
+            self.prepare_for_new_game()
 
     def find_best_move(self, state: State, model: DQNNet=None) -> (float, int):
         """

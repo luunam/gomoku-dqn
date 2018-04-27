@@ -71,6 +71,18 @@ def test():
     new_game = Game(dqn_agent, human_agent, SIZE, True)
     new_game.run()
 
+    print(len(dqn_agent.memory.ephemeral_storage))
+
+    new_game = Game(dqn_agent, human_agent, SIZE, True)
+    new_game.run()
+
+    print(len(dqn_agent.memory.ephemeral_storage))
+
+    new_game = Game(dqn_agent, human_agent, SIZE, True)
+    new_game.run()
+
+    print(len(dqn_agent.memory.ephemeral_storage))
+
     dqn_agent.print_memory()
 
 
