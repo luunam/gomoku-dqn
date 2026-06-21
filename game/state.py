@@ -8,8 +8,9 @@ from typing import Tuple, List, Dict
 
 
 class State:
-    def __init__(self, size, board=None, turn=2):
+    def __init__(self, size, board=None, turn=2, win_length=5):
         self.size = size
+        self.win_length = win_length
         self.action_size = self.size * self.size
         if board is None:
             self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
@@ -42,19 +43,19 @@ class State:
         directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
         for dx, dy in directions:
             count = 1
-            for step in range(1, 5):
+            for step in range(1, self.win_length):
                 nx, ny = x + step*dx, y + step*dy
                 if 0 <= nx < self.size and 0 <= ny < self.size and board[nx][ny] == turn:
                     count += 1
                 else:
                     break
-            for step in range(1, 5):
+            for step in range(1, self.win_length):
                 nx, ny = x - step*dx, y - step*dy
                 if 0 <= nx < self.size and 0 <= ny < self.size and board[nx][ny] == turn:
                     count += 1
                 else:
                     break
-            if count >= 5:
+            if count >= self.win_length:
                 return True
         return False
 
@@ -70,20 +71,23 @@ class State:
 
         x, y = self.convert_to_move(action)
         if self.board[x][y] != 0:
-            return State(15, clone_board, self.turn), -1, True
+            return State(self.size, clone_board, self.turn, self.win_length), -1, True
 
         clone_board[x][y] = current_turn
 
-        next_state = State(15, clone_board, next_turn)
+        next_state = State(self.size, clone_board, next_turn, self.win_length)
         next_state.occupied = self.occupied + 1
         
-        done = self.check_win(clone_board, action, current_turn) or next_state.occupied == self.size * self.size
+        is_win = self.check_win(clone_board, action, current_turn)
+        done = is_win or next_state.occupied == self.size * self.size
 
         # reward logic is handled outside. 0.0 for step
         reward = 0.0
 
         if done:
             next_state.finish = True
+            if is_win:
+                next_state.winner = current_turn
             
         next_state.last_action = action
         next_state.boundary = self._update_boundary(action)
@@ -99,7 +103,7 @@ class State:
                 elif clone_board[i][j] == 2:
                     clone_board[i][j] = 1
 
-        return State(15, clone_board)
+        return State(self.size, clone_board, win_length=self.win_length)
 
     def get_reward(self, turn: int) -> Tuple[float, bool]:
         """
@@ -339,8 +343,8 @@ class State:
         return possible_states
 
     def valid_move(self, move: int) -> bool:
-        i = move // 15
-        j = move % 15
+        i = move // self.size
+        j = move % self.size
         return self.board[i][j] == 0
 
     def done(self) -> bool:

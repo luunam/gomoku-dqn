@@ -19,8 +19,9 @@ class DQNAgent(Agent):
         Agent.__init__(self, board_size)
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = DQNNet().to(self.device)
-        self.duplicate_model = copy.deepcopy(self.model).to(self.device)
+        self.model = DQNNet(board_size).to(self.device)
+        self.duplicate_model = DQNNet(board_size).to(self.device)
+        self.duplicate_model.load_state_dict(self.model.state_dict())
 
         self.memory = Memory()
         self.gamma = 0.5
@@ -103,11 +104,11 @@ class DQNAgent(Agent):
         with torch.no_grad():
             act_value = model.predict(state, self.device).squeeze(0)
             
-        valid_moves = [i for i in range(225) if state.valid_move(i)]
+        valid_moves = [i for i in range(self.board_size * self.board_size) if state.valid_move(i)]
         if not valid_moves:
             return 0.0, 0
             
-        mask = torch.ones(225, dtype=torch.bool, device=self.device)
+        mask = torch.ones(self.board_size * self.board_size, dtype=torch.bool, device=self.device)
         mask[valid_moves] = False
         act_value[mask] = -float('inf')
         
@@ -115,7 +116,7 @@ class DQNAgent(Agent):
         return max_value.item(), max_value_idx.item()
 
     def find_random_move(self, state: State) -> Tuple[float, int]:
-        valid_moves = [i for i in range(225) if state.valid_move(i)]
+        valid_moves = [i for i in range(self.board_size * self.board_size) if state.valid_move(i)]
         if not valid_moves:
             return 0.0, 0
         random_move = random.choice(valid_moves)
@@ -133,12 +134,12 @@ class DQNAgent(Agent):
                 actions.append(self.find_random_move(state)[1])
             else:
                 q_vals = act_values[i]
-                valid_moves = [m for m in range(225) if state.valid_move(m)]
+                valid_moves = [m for m in range(self.board_size * self.board_size) if state.valid_move(m)]
                 if not valid_moves:
                     actions.append(-1)
                     continue
                     
-                masked_q = np.full(225, -np.inf)
+                masked_q = np.full(self.board_size * self.board_size, -np.inf)
                 for m in valid_moves:
                     masked_q[m] = q_vals[m]
                     
@@ -150,7 +151,7 @@ class DQNAgent(Agent):
         if len(self.memory) < batch_size:
             return
 
-        batch = self.memory.sample(batch_size)
+        batch: List[Tuple[State, int, float, State, bool]] = self.memory.sample(batch_size)
 
         states = torch.cat([DQNNet.state_to_tensor(s) for s, a, r, ns, d in batch]).to(self.device)
         actions = torch.LongTensor([[a] for s, a, r, ns, d in batch]).to(self.device)
@@ -165,7 +166,18 @@ class DQNAgent(Agent):
         # Target Q values
         with torch.no_grad():
             next_q_values = self.duplicate_model(next_states)
+            
+            # Mask illegal moves
+            mask = torch.ones(batch_size, self.board_size * self.board_size, dtype=torch.bool, device=self.device)
+            for i, (_, _, _, ns, _) in enumerate(batch):
+                valid_moves = [m for m in range(self.board_size * self.board_size) if ns.valid_move(m)]
+                if valid_moves:
+                    mask[i, valid_moves] = False
+            
+            next_q_values[mask] = -float('inf')
             max_next_q_values = next_q_values.max(1)[0]
+            max_next_q_values[max_next_q_values == -float('inf')] = 0.0
+            
             targets = rewards + self.gamma * max_next_q_values * (1 - dones)
 
         loss = F.mse_loss(q_values_for_actions, targets)

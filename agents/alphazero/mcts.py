@@ -66,7 +66,7 @@ class MCTS:
             while node.is_expanded:
                 action, node = node.select_child(self.c_puct)
             
-            if node.state.occupied == 225 or node.state.win:
+            if node.state.occupied == node.state.size * node.state.size or node.state.win:
                 if node.state.win:
                     node.backpropagate(-1.0)
                 else:
@@ -78,12 +78,12 @@ class MCTS:
                 logits, value = self.model(state_tensor)
                 value = value.item()
                 
-                valid_moves = [m for m in range(225) if node.state.valid_move(m)]
+                valid_moves = [m for m in range(node.state.size * node.state.size) if node.state.valid_move(m)]
                 if not valid_moves:
                     node.backpropagate(0.0)
                     continue
                     
-                mask = torch.full((1, 225), float('-inf')).to(self.device)
+                mask = torch.full((1, node.state.size * node.state.size), float('-inf')).to(self.device)
                 mask[0, valid_moves] = 0
                 
                 probs = torch.nn.functional.softmax(logits + mask, dim=-1).squeeze(0).cpu().numpy()
@@ -93,7 +93,7 @@ class MCTS:
             
             node.backpropagate(value)
 
-        action_probs = np.zeros(225)
+        action_probs = np.zeros(root.state.size * root.state.size)
         for action, child in root.children.items():
             action_probs[action] = child.visit_count / self.num_simulations
             

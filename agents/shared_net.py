@@ -71,8 +71,8 @@ class SharedNet(nn.Module):
         Convert state to pytorch tensor using a relative perspective
         """
         board = np.asarray(state.board)
-        my_piece = 3 - state.turn
-        opp_piece = state.turn
+        my_piece = state.turn
+        opp_piece = 3 - state.turn
         
         rel_board = np.zeros_like(board, dtype=np.float32)
         rel_board[board == my_piece] = 1.0

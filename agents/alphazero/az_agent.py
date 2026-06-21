@@ -27,7 +27,7 @@ class AlphaZeroAgent(Agent):
         self.model = SharedNet(board_size).to(self.device)
         self.memory = AZMemory()
         
-        self.mcts = MCTS(self.model, num_simulations=50, device=self.device)
+        self.mcts = MCTS(self.model, num_simulations=25, device=self.device)
         self.batch_size = 256
         self.epsilon = 0.0 # for compatibility with evaluate_against_random
 
@@ -35,13 +35,23 @@ class AlphaZeroAgent(Agent):
         return self.find_best_move(state)
 
     def find_best_move(self, state: State):
+        was_training = self.model.training
+        self.model.eval()
+        
         probs = self.mcts.search(state)
         action = np.argmax(probs)
+        
+        if was_training:
+            self.model.train()
+            
         return int(action)
 
     def find_best_moves_batch(self, states: List[State]) -> Tuple[List[int], List[np.ndarray]]:
         actions = []
         all_probs = []
+        
+        was_training = self.model.training
+        self.model.eval()
         
         for state in states:
             probs = self.mcts.search(state)
@@ -54,6 +64,9 @@ class AlphaZeroAgent(Agent):
             action = np.random.choice(len(probs), p=probs)
             actions.append(int(action))
             all_probs.append(probs)
+            
+        if was_training:
+            self.model.train()
             
         return actions, all_probs
 

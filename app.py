@@ -84,10 +84,15 @@ def play():
     state = State(15, board, turn)
     
     # We don't want agent to explore randomly when playing against human
-    original_epsilon = agent.epsilon
-    agent.epsilon = 0.0
-    _, best_move = agent.find_best_move(state)
-    agent.epsilon = original_epsilon
+    original_epsilon = getattr(agent, 'epsilon', 0.0)
+    if hasattr(agent, 'epsilon'):
+        agent.epsilon = 0.0
+        
+    result = agent.find_best_move(state)
+    best_move = result[1] if isinstance(result, tuple) else result
+    
+    if hasattr(agent, 'epsilon'):
+        agent.epsilon = original_epsilon
     
     r = best_move // 15
     c = best_move % 15

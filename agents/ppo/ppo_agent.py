@@ -44,21 +44,28 @@ class PPOAgent(Agent):
 
     def find_best_move(self, state: State):
         state_tensor = SharedNet.state_to_tensor(state).to(self.device)
+        
+        was_training = self.model.training
+        self.model.eval()
+        
         with torch.no_grad():
             logits, value = self.model(state_tensor)
             
-            valid_moves = [m for m in range(225) if state.valid_move(m)]
-            if not valid_moves:
-                return 0
-                
-            mask = torch.full((1, 225), float('-inf')).to(self.device)
-            mask[0, valid_moves] = 0
+        if was_training:
+            self.model.train()
             
-            logits = logits + mask
-            probs = F.softmax(logits, dim=-1)
-            dist = Categorical(probs)
-            action = dist.sample()
+        valid_moves = [m for m in range(self.board_size * self.board_size) if state.valid_move(m)]
+        if not valid_moves:
+            return 0
             
+        mask = torch.full((1, self.board_size * self.board_size), float('-inf')).to(self.device)
+        mask[0, valid_moves] = 0
+        
+        logits = logits + mask
+        probs = F.softmax(logits, dim=-1)
+        dist = Categorical(probs)
+        action = dist.sample()
+        
         return action.item()
 
     def find_best_moves_batch(self, states: List[State]) -> Tuple[List[int], List[float], List[float]]:
@@ -70,13 +77,14 @@ class PPOAgent(Agent):
             logprobs = []
             
             for i, state in enumerate(states):
-                valid_moves = [m for m in range(225) if state.valid_move(m)]
+                valid_moves = [m for m in range(self.board_size * self.board_size) if state.valid_move(m)]
                 if not valid_moves:
-                    actions.append(-1)
-                    logprobs.append(0.0)
+                    actions.append(0)
+                    logprobs.append(torch.tensor(0.0).to(self.device))
+                    values.append(value[0])
                     continue
                     
-                mask = torch.full((225,), float('-inf')).to(self.device)
+                mask = torch.full((self.board_size * self.board_size,), float('-inf')).to(self.device)
                 mask[valid_moves] = 0
                 
                 masked_logits = logits[i] + mask
@@ -107,7 +115,8 @@ class PPOAgent(Agent):
         for reward, is_terminal in zip(reversed(rewards), reversed(is_terminals)):
             if is_terminal:
                 discounted_reward = 0
-            discounted_reward = reward + (self.gamma * discounted_reward)
+            # Negate the future discounted reward because the next state belongs to the opponent
+            discounted_reward = reward - (self.gamma * discounted_reward)
             returns.insert(0, discounted_reward)
             
         returns = torch.tensor(returns, dtype=torch.float32).to(self.device)

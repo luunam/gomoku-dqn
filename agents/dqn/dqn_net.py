@@ -24,8 +24,9 @@ class ResBlock(nn.Module):
         return out
 
 class DQNNet(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, board_size=15) -> None:
         super(DQNNet, self).__init__()
+        self.board_size = board_size
         
         # Initial convolutional block
         self.conv_in = nn.Conv2d(1, 64, kernel_size=3, padding=1)
@@ -40,8 +41,7 @@ class DQNNet(nn.Module):
         self.conv_out = nn.Conv2d(64, 2, kernel_size=1)
         self.bn_out = nn.BatchNorm2d(2)
         
-        # 2 channels * 15 * 15 = 450
-        self.fc = nn.Linear(450, 225)
+        self.fc = nn.Linear(2 * self.board_size * self.board_size, self.board_size * self.board_size)
         
         self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
 
@@ -55,7 +55,7 @@ class DQNNet(nn.Module):
         # Output block
         x = F.relu(self.bn_out(self.conv_out(x)))
         
-        x = x.view(-1, 450)
+        x = x.view(-1, 2 * self.board_size * self.board_size)
         x = self.fc(x)
         return x
 
@@ -65,8 +65,8 @@ class DQNNet(nn.Module):
         Convert state to pytorch tensor using a relative perspective
         """
         board = np.asarray(state.board)
-        my_piece = 3 - state.turn
-        opp_piece = state.turn
+        my_piece = state.turn
+        opp_piece = 3 - state.turn
         
         rel_board = np.zeros_like(board, dtype=np.float32)
         rel_board[board == my_piece] = 1.0
@@ -95,5 +95,14 @@ class DQNNet(nn.Module):
         state_tensor = DQNNet.state_to_tensor(state)
         if device is not None:
             state_tensor = state_tensor.to(device)
+        
+        # Set to eval mode to use moving average statistics for BatchNorm
+        was_training = self.training
+        self.eval()
+        
         act_value = self(state_tensor)
+        
+        if was_training:
+            self.train()
+            
         return act_value

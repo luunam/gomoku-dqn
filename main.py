@@ -12,6 +12,19 @@ import glob
 import re
 import multiprocessing
 
+def clean_checkpoints(pattern, keep=3):
+    files = [f for f in glob.glob(pattern) if re.search(r'ep\d+', f)]
+    def extract_ep(name):
+        m = re.search(r'ep(\d+)', name)
+        return int(m.group(1)) if m else -1
+    files.sort(key=extract_ep)
+    for f in files[:-keep]:
+        try:
+            os.remove(f)
+            print(f"Removed old checkpoint: {f}")
+        except OSError:
+            pass
+
 EPISODES = 150000
 SIZE = 15
 BATCH_SIZE = 256
@@ -109,6 +122,7 @@ def train_dqn():
                     if episodes_completed > 0 and episodes_completed % 1000 == 0:
                         print(f'Saving DQN snapshot at episode {episodes_completed}')
                         agent1.save(f'./trained/agent_ep{episodes_completed}.h5')
+                        clean_checkpoints('./trained/agent_ep*.h5', keep=3)
                         
                     if episodes_completed > 0 and episodes_completed % 5000 == 0:
                         win_rate = evaluate_against_random(agent1, 100)
@@ -191,6 +205,7 @@ def train_ppo():
 
                     if episodes_completed > 0 and episodes_completed % 1000 == 0:
                         agent.save(f'./trained/ppo_ep{episodes_completed}.h5')
+                        clean_checkpoints('./trained/ppo_ep*.h5', keep=3)
             
             agent.replay(BATCH_SIZE)
 
@@ -262,6 +277,7 @@ def train_az():
 
                     if episodes_completed > 0 and episodes_completed % 100 == 0:
                         agent.save(f'./trained/az_ep{episodes_completed}.h5')
+                        clean_checkpoints('./trained/az_ep*.h5', keep=3)
             
             agent.replay(BATCH_SIZE)
 
