@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku AI Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Gomoku AI Arena</h1>
+            <div class="controls">
+                <div class="select-wrapper">
+                    <select id="modelSelect" aria-label="Select AI Model">
+                        <option value="">Loading models...</option>
+                    </select>
+                </div>
+                <button id="resetBtn" class="btn primary-btn">New Game</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="game-board-wrapper">
+                <div id="board" class="board"></div>
+            </div>
+            
+            <aside class="sidebar">
+                <div class="status-panel">
+                    <h2>Game Status</h2>
+                    <p id="statusText" class="status-text">Your turn (Black)</p>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

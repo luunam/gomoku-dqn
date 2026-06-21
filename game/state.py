@@ -4,6 +4,7 @@ from colorama import Fore, Style
 import copy
 import torch
 from torch.autograd import Variable
+from typing import Tuple, List, Dict
 
 
 class State:
@@ -36,36 +37,58 @@ class State:
     def get_score(self) -> int:
         return self.rewards[3-self.turn] - self.rewards[self.turn]
 
-    def step(self, action: int) -> ('State', int, bool):
+    def check_win(self, board: List[List[int]], action: int, turn: int) -> bool:
+        x, y = self.convert_to_move(action)
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        for dx, dy in directions:
+            count = 1
+            for step in range(1, 5):
+                nx, ny = x + step*dx, y + step*dy
+                if 0 <= nx < self.size and 0 <= ny < self.size and board[nx][ny] == turn:
+                    count += 1
+                else:
+                    break
+            for step in range(1, 5):
+                nx, ny = x - step*dx, y - step*dy
+                if 0 <= nx < self.size and 0 <= ny < self.size and board[nx][ny] == turn:
+                    count += 1
+                else:
+                    break
+            if count >= 5:
+                return True
+        return False
+
+    def step(self, action: int) -> Tuple['State', float, bool]:
         """
         Return the next state and reward given the action and the turn of the player that just move. The reward here is the
         reward for the NEXT player, and not the player that just executes the move
-
-        :param action:
-        :return: The next state, reward, and whether the game is done
         """
-        if not self.valid_move(action):
-            x, y = self.convert_to_move(action)
-            print('Invalid move {}, {}'.format(x, y))
-            return self, -1, False
+        current_turn = self.turn
+        next_turn = 3 - self.turn
 
         clone_board = self._clone_board()
-        x = action // len(self.board)
-        y = action % len(self.board)
 
-        current_turn = 3 - self.turn
+        x, y = self.convert_to_move(action)
+        if self.board[x][y] != 0:
+            return State(15, clone_board, self.turn), -1, True
+
         clone_board[x][y] = current_turn
 
-        next_state = State(15, clone_board, current_turn)
-        _, done = next_state.get_reward(current_turn)
-        next_turn = 3-current_turn
-        reward, _ = next_state.get_reward(next_turn)
-
+        next_state = State(15, clone_board, next_turn)
         next_state.occupied = self.occupied + 1
+        
+        done = self.check_win(clone_board, action, current_turn) or next_state.occupied == self.size * self.size
+
+        # reward logic is handled outside. 0.0 for step
+        reward = 0.0
+
+        if done:
+            next_state.finish = True
+            
         next_state.last_action = action
         next_state.boundary = self._update_boundary(action)
 
-        return next_state, 0, done
+        return next_state, reward, done
 
     def reflected_state(self) -> 'State':
         clone_board = self._clone_board()
@@ -78,22 +101,16 @@ class State:
 
         return State(15, clone_board)
 
-    def get_reward(self, turn: int) -> (int, bool):
+    def get_reward(self, turn: int) -> Tuple[float, bool]:
         """
         Get reward for player with the given turn
         :param turn: the turn of the given player
         :return: reward and whether the game is done
         """
         result = self.inspect(turn)
-        total = 0
-        for k in result:
-            total += result[k]
 
         done = result['five'] > 0 or self.occupied == self.size * self.size
-        if total > 0:
-            return 1, done
-        else:
-            return -1, done
+        return 0.0, done
 
     def inspect(self, turn: int) -> dict:
         """
@@ -304,7 +321,7 @@ class State:
 
         return to_return
 
-    def possible_next_states(self, use_boundary=False) -> list:
+    def possible_next_states(self, use_boundary: bool = False) -> List['State']:
         opponent_turn = 3 - self.turn
         possible_states = []
 
@@ -329,7 +346,7 @@ class State:
     def done(self) -> bool:
         return self.finish
 
-    def convert_to_move(self, n: int) -> (int, int):
+    def convert_to_move(self, n: int) -> Tuple[int, int]:
         return n // self.size, n % self.size
 
     def _update_boundary(self, action: int) -> dict:
@@ -342,10 +359,5 @@ class State:
             'minY': min(self.boundary['minY'], y)
         }
 
-    def _clone_board(self) -> list:
-        to_return = [[0 for _ in range(self.size)] for _ in range(self.size)]
-        for i in range(self.size):
-            for j in range(self.size):
-                to_return[i][j] = self.board[i][j]
-
-        return to_return
+    def _clone_board(self) -> List[List[int]]:
+        return [row[:] for row in self.board]

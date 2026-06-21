@@ -1,5 +1,5 @@
 from .state import State
-from colorama import init
+
 from agents import Agent
 
 
@@ -15,25 +15,17 @@ class Game:
         self.last_action = None
         self.test = test
 
-        init()
-
     def run(self):
         reward = 0
         done = False
         while not done:
             reward, done = self.calling_all_agents(reward, done)
 
-        if not self.test:
-            print(self.state)
-
     def calling_all_agents(self, reward, done):
         for agent in self.agents:
             action = agent.act(self.state, reward, done)
             # reward that self.state.step returns is for the next agent and not for the agent that just makes the move
             self.state, reward, done = self.state.step(action)
-
-            if self.test:
-                print(self.state)
 
             if done:
                 agent.remember(1, self.state, done)

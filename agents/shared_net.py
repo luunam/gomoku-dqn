@@ -1,11 +1,9 @@
+import torch
 from torch import nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.optim as optim
-import torch
 from game.state import State
 import numpy as np
-
 
 class ResBlock(nn.Module):
     def __init__(self, channels):
@@ -23,9 +21,10 @@ class ResBlock(nn.Module):
         out = F.relu(out)
         return out
 
-class DQNNet(nn.Module):
-    def __init__(self) -> None:
-        super(DQNNet, self).__init__()
+class SharedNet(nn.Module):
+    def __init__(self, size=15) -> None:
+        super(SharedNet, self).__init__()
+        self.size = size
         
         # Initial convolutional block
         self.conv_in = nn.Conv2d(1, 64, kernel_size=3, padding=1)
@@ -36,28 +35,35 @@ class DQNNet(nn.Module):
             *[ResBlock(64) for _ in range(5)]
         )
         
-        # Output head
-        self.conv_out = nn.Conv2d(64, 2, kernel_size=1)
-        self.bn_out = nn.BatchNorm2d(2)
+        # Policy Head (Actor)
+        self.policy_conv = nn.Conv2d(64, 2, kernel_size=1)
+        self.policy_bn = nn.BatchNorm2d(2)
+        self.policy_fc = nn.Linear(2 * size * size, size * size)
         
-        # 2 channels * 15 * 15 = 450
-        self.fc = nn.Linear(450, 225)
+        # Value Head (Critic)
+        self.value_conv = nn.Conv2d(64, 1, kernel_size=1)
+        self.value_bn = nn.BatchNorm2d(1)
+        self.value_fc1 = nn.Linear(1 * size * size, 64)
+        self.value_fc2 = nn.Linear(64, 1)
         
         self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Initial block
+    def forward(self, x: torch.Tensor):
         x = F.relu(self.bn_in(self.conv_in(x)))
-        
-        # ResNet body
         x = self.res_blocks(x)
         
-        # Output block
-        x = F.relu(self.bn_out(self.conv_out(x)))
+        # Policy Head
+        p = F.relu(self.policy_bn(self.policy_conv(x)))
+        p = p.view(-1, 2 * self.size * self.size)
+        policy_logits = self.policy_fc(p)
         
-        x = x.view(-1, 450)
-        x = self.fc(x)
-        return x
+        # Value Head
+        v = F.relu(self.value_bn(self.value_conv(x)))
+        v = v.view(-1, 1 * self.size * self.size)
+        v = F.relu(self.value_fc1(v))
+        value = torch.tanh(self.value_fc2(v))
+        
+        return policy_logits, value
 
     @staticmethod
     def state_to_tensor(state: State) -> torch.Tensor:
@@ -75,25 +81,3 @@ class DQNNet(nn.Module):
         state_tensor = torch.from_numpy(rel_board)
         state_tensor = state_tensor.view(1, 1, state.size, state.size)
         return state_tensor
-
-    @staticmethod
-    def state_to_variable(state: State) -> Variable:
-        """
-        Convert state to pytorch variable
-        """
-        state_tensor = DQNNet.state_to_tensor(state)
-        state_var = Variable(state_tensor).type(torch.FloatTensor)
-        return state_var
-
-    def predict(self, state: State, device: torch.device = None) -> torch.Tensor:
-        """
-        Predict the Q-values of the given state.
-        
-        :param state: State
-        :return: A Tensor of size 1 * 225 containing values for each move
-        """
-        state_tensor = DQNNet.state_to_tensor(state)
-        if device is not None:
-            state_tensor = state_tensor.to(device)
-        act_value = self(state_tensor)
-        return act_value
