@@ -27,7 +27,6 @@ class DQNNet(nn.Module):
     def __init__(self, board_size=15) -> None:
         super(DQNNet, self).__init__()
         self.board_size = board_size
-        
         # Initial convolutional block
         self.conv_in = nn.Conv2d(1, 64, kernel_size=3, padding=1)
         self.bn_in = nn.BatchNorm2d(64)
@@ -42,7 +41,6 @@ class DQNNet(nn.Module):
         self.bn_out = nn.BatchNorm2d(2)
         
         self.fc = nn.Linear(2 * self.board_size * self.board_size, self.board_size * self.board_size)
-        
         self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

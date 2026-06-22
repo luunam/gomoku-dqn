@@ -24,7 +24,7 @@ class DQNAgent(Agent):
         self.duplicate_model.load_state_dict(self.model.state_dict())
 
         self.memory = Memory()
-        self.gamma = 0.5
+        self.gamma = 0.99
 
         self.epsilon = 1.0
         self.epsilon_decay = 0.99
@@ -35,7 +35,7 @@ class DQNAgent(Agent):
         self.last_state = None
         
         self.steps = 0
-        self.target_update_freq = 10
+        self.target_update_freq = 500
 
     def prepare_for_new_game(self) -> None:
         self.last_state = None
@@ -178,7 +178,7 @@ class DQNAgent(Agent):
             max_next_q_values = next_q_values.max(1)[0]
             max_next_q_values[max_next_q_values == -float('inf')] = 0.0
             
-            targets = rewards + self.gamma * max_next_q_values * (1 - dones)
+            targets = rewards - self.gamma * max_next_q_values * (1 - dones)
 
         loss = F.mse_loss(q_values_for_actions, targets)
 

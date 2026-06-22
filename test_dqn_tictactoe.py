@@ -100,7 +100,6 @@ def main():
                 if episodes_completed % 100 == 0:
                     print(f'Episodes: {episodes_completed}, Time: {time.time() - start:.2f}s')
                     start = time.time()
-                    agent.duplicate_model.load_state_dict(agent.model.state_dict())
                     
                 if episodes_completed % 500 == 0:
                     evaluate_against_random(agent, 100)
