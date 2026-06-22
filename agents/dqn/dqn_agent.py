@@ -11,7 +11,7 @@ import numpy as np
 from .dqn_net import DQNNet
 
 from game.state import State
-from .memory import Memory
+from .memory import Memory, PrioritizedMemory
 
 
 class DQNAgent(Agent):
@@ -23,7 +23,7 @@ class DQNAgent(Agent):
         self.duplicate_model = DQNNet(board_size).to(self.device)
         self.duplicate_model.load_state_dict(self.model.state_dict())
 
-        self.memory = Memory()
+        self.memory = PrioritizedMemory()
         self.gamma = 0.99
 
         self.epsilon = 1.0
@@ -151,7 +151,8 @@ class DQNAgent(Agent):
         if len(self.memory) < batch_size:
             return
 
-        batch: List[Tuple[State, int, float, State, bool]] = self.memory.sample(batch_size)
+        batch, idxs, is_weights = self.memory.sample(batch_size)
+        is_weights = torch.FloatTensor(is_weights).to(self.device)
 
         states = torch.cat([DQNNet.state_to_tensor(s) for s, a, r, ns, d in batch]).to(self.device)
         actions = torch.LongTensor([[a] for s, a, r, ns, d in batch]).to(self.device)
@@ -180,7 +181,13 @@ class DQNAgent(Agent):
             
             targets = rewards - self.gamma * max_next_q_values * (1 - dones)
 
-        loss = F.mse_loss(q_values_for_actions, targets)
+        # TD errors
+        errors = torch.abs(q_values_for_actions - targets).detach().cpu().numpy()
+        
+        # update memory priorities
+        self.memory.update(idxs, errors)
+
+        loss = (is_weights * F.mse_loss(q_values_for_actions, targets, reduction='none')).mean()
 
         self.model.optimizer.zero_grad()
         loss.backward()
